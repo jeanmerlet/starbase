@@ -1,0 +1,4 @@
+name,char,color,blocking,prob,min_num,max_num,dgn_lvl
+skitterling,s,dark purple,True,0.4,1,4,1
+service 'bot,R,white,True,0.1,1,1,1
+none,,,,0.5,,,1

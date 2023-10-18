@@ -22,18 +22,18 @@ class Ellipse:
 
 
 class RectRoom:
-    def __init__(self, x, y, w, h):
-        self.x1 = x
-        self.y1 = y
-        self.x2 = x + w
-        self.y2 = y + h
+    def __init__(self, x1, y1, x2, y2):
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
         if self.x2 < self.x1:
-            self.x1, self.x2 = self.x2-1, self.x1+1
+            self.x1, self.x2 = self.x2, self.x1
         if self.y2 < self.y1:
-            self.y1, self.y2 = self.y2-1, self.y1+1
+            self.y1, self.y2 = self.y2, self.y1
 
     def inner(self):
-        return slice(self.x1, self.x2), slice(self.y1, self.y2)
+        return slice(self.x1+1, self.x2), slice(self.y1+1, self.y2)
 
     def outer(self):
         return [
@@ -45,8 +45,8 @@ class RectRoom:
 
 
 class Hallway(RectRoom):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, x1, y1, x2, y2):
+        super().__init__(x1, y1, x2, y2)
 
 
 class Block:
@@ -93,7 +93,30 @@ class Block:
         self.tile_idx[splitx, splity] = 0
         for angle in angles:
             self._add_inner_wall(splitx, splity, angle)
-            
+
+    def _rooms(self, x, y, angles):
+        # not needed, will do rooms in map
+        rooms = []
+        if (-1, 0) in angles and (1, 0) in angles:
+            if (0, -1) in angles:
+                rooms.append(RectRoom(0, 0, x, y))
+                rooms.append(RectRoom(x, 0, self.s-1, y))
+                rooms.append(RectRoom(0, y, self.s-1, self.s-1))
+            if (0, 1) in angles:
+                rooms.append(RectRoom(0, 0, self.s-1, y))
+                rooms.append(RectRoom(0, y, x, self.s-1))
+                rooms.append(RectRoom(x, y, self.s-1, self.s-1))
+        if (0, -1) in angles and (0, 1) in angles:
+            if (-1, 0) in angles:
+                rooms.append(RectRoom(0, 0, x, y, dx, dy))
+                rooms.append(RectRoom(0, y, x, self.s-1, dx, dy))
+                rooms.append(RectRoom(x, 0, self.s-1, self.s-1))
+            if (1, 0) in angles:
+                rooms.append(RectRoom(0, 0, x, self.s-1, dx, dy))
+                rooms.append(RectRoom(x, 0, self.s-1, y, dx, dy))
+                rooms.append(RectRoom(x, y, self.s-1, self.s-1))
+        return rooms
+
     def divide(self, padding):
         """Split block into rooms and hallways.
         The edge coords are all walls.
@@ -104,6 +127,8 @@ class Block:
         splitx, splity = self._gen_split_xy(self.s, self.s, padding)
         split_angles = self._gen_split_angles()
         self._split(splitx, splity, split_angles)
+        #rooms = self._rooms(splitx, splity, split_angles)
+        #return rooms
 
 
 class Grid:
@@ -127,6 +152,7 @@ class Grid:
         self.tile_idx[x1: x2, y1: y2] = block.tile_idx
 
     def divide_blocks(self, padding):
+        rooms = []
         for x in range(self.w):
             for y in range(self.h):
                 block = Block(self.size)
@@ -134,10 +160,25 @@ class Grid:
                 self._add_block_to_tile_idx(x, y, block)
 
     def connect_blocks(self):
-        pass
-
-
-
-
-
-
+        for x in range(0, self.w):
+            v_wall_x = (x * self.size) - x
+            h_wall_minx = (x * self.size) + 1 - x
+            h_wall_maxx = (x * self.size) + self.size - x - 1
+            for y in range(0, self.h):
+                v_wall_miny = (y * self.size) + 1 - y
+                v_wall_maxy = (y * self.size) + self.size - y - 1
+                v_walls = [(v_wall_x, z) for z in range(v_wall_miny, v_wall_maxy)]
+                num_doors = 2 if np.random.rand() < 0.25 else 1
+                v_wall_idx = np.random.choice(len(v_walls), size=num_doors, replace=False)
+                v_doors = [v_walls[idx] for idx in v_wall_idx]
+                for door in v_doors:
+                    if x == 0: break
+                    self.tile_idx[door] = 2
+                h_wall_y = (y * self.size) - y
+                h_walls = [(z, h_wall_y) for z in range(h_wall_minx, h_wall_maxx)]
+                num_doors = 2 if np.random.rand() < 0.25 else 1
+                h_wall_idx = np.random.choice(len(h_walls), size=num_doors, replace=False)
+                h_doors = [h_walls[idx] for idx in h_wall_idx]
+                for door in h_doors:
+                    if y == 0: break
+                    self.tile_idx[door] = 2

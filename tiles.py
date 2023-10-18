@@ -1,39 +1,46 @@
 class Tile:
-    def __init__(self, char, color, walkable, transparent):
-        self.char = char
-        self.color = color
-        self.icon = f'[color={color}]{char}'
+    def __init__(self, char, lcol, dcol, walkable, opaque):
+        self.light_icon = f'[color={lcol}]{char}'
+        self.dark_icon = f'[color={dcol}]{char}'
         self.walkable = walkable
-        self.transparent = transparent
+        self.opaque = opaque
 
 class Floor(Tile):
     def __init__(self):
-        super().__init__('.', 'steel_floor', True, True)
+        super().__init__('.', 'l_stl', 'd_stl', True, False)
 
 class Wall(Tile):
     def __init__(self):
-        super().__init__('#', 'steel_wall', False, False)
+        super().__init__('#', 'l_stl', 'd_stl', False, True)
 
 class Door(Tile):
-    def __init__(self, char, color, walkable, transparent):
-        super().__init__(char, color, walkable, transparent)
+    def __init__(self, char, lcol, dcol, walkable, opaque):
+        super().__init__(char, lcol, dcol, walkable, opaque)
 
 class ClosedDoor(Door):
     def __init__(self):
-        super().__init__('+', 'steel_floor', False, False)
+        super().__init__('+', 'l_stl', 'd_stl', True, True)
 
 class OpenDoor(Door):
     def __init__(self):
-        super().__init__('.', 'steel_floor', True, True)
+        super().__init__('.', 'l_stl', 'd_stl', True, False)
 
 class BrokenDoor(Door):
     def __init__(self):
-        super().__init__('.', 'steel_floor', True, True)
+        super().__init__('.', 'l_stl', 'd_stl', True, False)
+
+class TestDoor(Door):
+    def __init__(self):
+        super().__init__('+', 'red', 'red', True, False)
 
 class Airlock(Tile):
     def __init__(self):
-        super().__init__('*', 'steel_floor', False, False)
+        super().__init__('*', 'l_stl', 'd_stl', False, True)
 
 class Space(Tile):
     def __init__(self):
-        super().__init__(' ', 'black', True, True)
+        super().__init__(' ', 'black', 'dark gray', True, False)
+
+class Fog(Tile):
+    def __init__(self):
+        super().__init__(' ', 'black', 'black', True, False)

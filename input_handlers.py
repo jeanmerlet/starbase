@@ -1,8 +1,8 @@
 from actions import Action, QuitAction, MoveAction
 from bearlibterminal import terminal as blt
 
-class EventHandler():
 
+class EventHandler():
     def dispatch(self, event):
         # movement
         if event == blt.TK_KP_1:
