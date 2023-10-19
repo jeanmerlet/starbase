@@ -16,7 +16,7 @@ class Engine:
         self.fov = fov
         self._update_fov()
         self.gui = gui
-        self.gui.update(self.player, ['meow'])
+        self.gui.update(self.player, [])
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
@@ -24,25 +24,31 @@ class Engine:
     def _handle_enemy_turns(self):
         visible = self.game_map.visible
         tiles = self.game_map.tiles
+        msgs = []
         for entity in self.entities - {self.player}:
             if entity.ai:
                 target = self.player if self.player.combat.is_alive() else None
                 action = entity.ai.get_action(target, visible, tiles)
-                action.perform(self, entity)
+                msgs += action.perform(self, entity)
+        return msgs
+
+    def handle_event(self):
+        event = blt.read()
+        action = self.event_handler.dispatch(event)
+        if action is None: return
+        msgs = []
+        msgs += action.perform(self, self.player)
+        msgs += self._handle_enemy_turns()
+        self._update_all(msgs)
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def handle_event(self):
-        event = blt.read()
-        action = self.event_handler.dispatch(event)
-        if action is None: return
-        action.perform(self, self.player)
-        self._handle_enemy_turns()
+    def _update_all(self, msgs):
         self._update_fov()
-        self.gui.update(self.player, [''])
+        self.gui.update(self.player, msgs)
 
     def render(self):
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
@@ -79,8 +85,6 @@ def main():
     while True:
         engine.render()
         engine.handle_event()
-        #while blt.has_input():
-            #engine.handle_event()
 
 
 if __name__ == "__main__":
