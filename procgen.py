@@ -35,14 +35,6 @@ class RectRoom:
     def inner(self):
         return slice(self.x1+1, self.x2), slice(self.y1+1, self.y2)
 
-    def outer(self):
-        return [
-            [(x, self.y1-1) for x in range(self.x1-1, self.x2+1)],
-            [(x, self.y2) for x in range(self.x1-1, self.x2+1)],
-            [(self.x1-1, y) for y in range(self.y1-1, self.y2+1)],
-            [(self.x2, y) for y in range(self.y1-1, self.y2+1)]
-        ]
-
 
 class Hallway(RectRoom):
     def __init__(self, x1, y1, x2, y2):

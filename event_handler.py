@@ -1,4 +1,4 @@
-from actions import Action, QuitAction, CheckAction
+from actions import QuitAction, CheckAction
 from bearlibterminal import terminal as blt
 
 

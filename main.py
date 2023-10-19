@@ -1,5 +1,5 @@
 from bearlibterminal import terminal as blt
-from input_handlers import EventHandler
+from event_handler import EventHandler
 from game_map import Map
 from entities import Entity, Actor
 from fov import FieldOfView as Fov
@@ -15,12 +15,13 @@ class Engine:
         self._update_fov()
 
     def _handle_enemy_turns(self):
+        target = self.player
+        visible = self.game_map.visible
+        tiles = self.game_map.tiles
         for entity in self.entities - {self.player}:
-            target = self.player
-            visible = self.game_map.visible
-            tiles = self.game_map.tiles
-            action = entity.ai.perform(target, visible, tiles)
-            action.perform(self, entity)
+            if entity.ai:
+                action = entity.ai.get_action(target, visible, tiles)
+                action.perform(self, entity)
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
@@ -35,10 +36,13 @@ class Engine:
         self._handle_enemy_turns()
         self._update_fov()
 
+    def _get_render_sorted_entities(self):
+        return sorted(self.entities, key=lambda x: -x.render_order)
+
     def render(self):
         blt.clear()
         self.game_map.render(blt)
-        for ent in self.entities:
+        for ent in self._get_render_sorted_entities():
             if self.game_map.visible[ent.x, ent.y]:
                 ent.render(blt)
         blt.refresh()

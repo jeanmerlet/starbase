@@ -21,7 +21,7 @@ class Map:
         self.opaque = np.full((width, height), fill_value=False)
         self.visible = np.full((width, height), fill_value=False)
         self.explored = np.full((width, height), fill_value=False)
-        self.explored = np.full((width, height), fill_value=True)
+        #self.explored = np.full((width, height), fill_value=True)
         self.rooms = []
 
     def render(self, blt):

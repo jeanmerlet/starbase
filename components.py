@@ -11,11 +11,25 @@ class Combat:
 
     def set_hp(self, value):
         self.hp = min(value, self.max_hp)
+        if self.hp <= 0: self._die()
+
+    def _die(self):
+        if self.entity.name == 'player':
+            death_msg = 'You have DIED.'
+        else:
+            death_msg = f'{self.entity.name.capitalize()} dies.'
+        self.entity.name = f'{self.entity.name} corpse'
+        self.entity.char = '%'
+        self.entity.color = 'dark red'
+        self.entity.icon = '[color=dark red]%'
+        self.entity.blocking = False
+        self.entity.ai = None
+        self.entity.render_order = 2
 
 
 class BaseAI(Action):
-    def perform(self):
-        pass
+    def get_action(self):
+        NotImplementedError()
 
     def get_path_to_target(self, dest_x, dest_y):
         pass
@@ -26,7 +40,7 @@ class HostileEnemy(BaseAI):
         self.path = []
         self.turns_since_player_seen = 0
 
-    def perform(self, target, visible, tiles):
+    def get_action(self, target, visible, tiles):
         if not visible[self.entity.x, self.entity.y]:
             if not self.path:
                 return WaitAction()
