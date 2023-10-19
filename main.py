@@ -12,14 +12,28 @@ class Engine:
         self.player = player
         self.entities = entities
         self.fov = fov
-        self.update_fov()
+        self._update_fov()
+
+    def _handle_enemy_turns(self):
+        for entity in self.entities - {self.player}:
+            target = self.player
+            visible = self.game_map.visible
+            tiles = self.game_map.tiles
+            action = entity.ai.perform(target, visible, tiles)
+            action.perform(self, entity)
+
+    def _update_fov(self):
+        self.game_map.visible[:, :] = False
+        self.fov.do_fov(self.player, self.game_map.visible)
+        self.game_map.explored |= self.game_map.visible
 
     def handle_event(self):
         event = blt.read()
         action = self.event_handler.dispatch(event)
-        if action is not None:
-            action.perform(self, self.player)
-        self.update_fov()
+        if action is None: return
+        action.perform(self, self.player)
+        self._handle_enemy_turns()
+        self._update_fov()
 
     def render(self):
         blt.clear()
@@ -29,33 +43,28 @@ class Engine:
                 ent.render(blt)
         blt.refresh()
 
-    def update_fov(self):
-        self.game_map.visible[:, :] = False
-        self.fov.do_fov(self.player, self.game_map.visible)
-        self.game_map.explored |= self.game_map.visible
-
     def get_blocking_entity(self, x, y):
         for ent in self.entities:
             if ent.blocking and ent.x == x and ent.y == y:
                 return ent
         return None
 
+
 def main():
     screen_width = 160
     screen_height = 55
     map_width = 160
     map_height = 50
-    gridw = 10
-    gridh = 5
-    block_size = 10
+    gridw = 100
+    gridh = 40
+    block_size = 20
     padding = 1
 
     event_handler = EventHandler()
     game_map = Map(map_width, map_height)
-    game_map.gen_map(gridw, gridh, block_size, padding)
-    x, y = game_map.get_start()
-    player = Actor('player', x, y, '@', 'amber', True, 8)
-    entities = [player]
+    game_map.gen_map(gridw, gridh, block_size)
+    player = game_map.create_player()
+    entities = {player}
     game_map.populate(entities)
     fov = Fov(game_map.opaque)
     engine = Engine(event_handler, game_map, player, entities, fov)

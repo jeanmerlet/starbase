@@ -10,6 +10,8 @@ class FieldOfView:
 
     def __init__(self, opaque):
         self.opaque = opaque
+        self.max_x = opaque.shape[0] - 1
+        self.max_y = opaque.shape[1] - 1
 
     def do_fov(self, origin, visible):
         x = origin.x
@@ -27,6 +29,7 @@ class FieldOfView:
 
         radius_sq = radius**2
         for j in range(row, radius+1):
+            out_of_bounds = False
             blocked = False
             dx = -j - 1
             dy = -j
@@ -34,6 +37,9 @@ class FieldOfView:
                 dx += 1
                 X = ox + dx * xx + dy * xy
                 Y = oy + dx * yx + dy * yy
+                # out of bounds check
+                if X < 0 or X > self.max_x or Y < 0 or Y > self.max_y:
+                    continue
                 l_slope = (dx - 0.5)/(dy + 0.5)
                 r_slope = (dx + 0.5)/(dy - 0.5)
                 if start < r_slope:

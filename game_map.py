@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor
+from components import Combat, BaseAI, HostileEnemy
 from tiles import *
 
 
@@ -9,7 +10,8 @@ class Map:
     TILE_ID = {
         0: Wall(),
         1: Floor(),
-        2: ClosedDoor()
+        2: ClosedDoor(),
+        3: BrokenDoor()
     }
 
     def __init__(self, width, height):
@@ -19,7 +21,6 @@ class Map:
         self.opaque = np.full((width, height), fill_value=False)
         self.visible = np.full((width, height), fill_value=False)
         self.explored = np.full((width, height), fill_value=False)
-        self.visible = np.full((width, height), fill_value=True)
         self.explored = np.full((width, height), fill_value=True)
         self.rooms = []
 
@@ -57,10 +58,17 @@ class Map:
                 if self.tiles[x, y].opaque:
                     self.opaque[x, y] = True
 
+    def _add_map_edge(self):
+        self.tiles[:, 0] = MapEdge()
+        self.tiles[:, self.height - 1] = MapEdge()
+        self.tiles[0, :] = MapEdge()
+        self.tiles[self.width - 1, :] = MapEdge()
+
     def _gen_tiles(self, gridx, gridy, grid_idx):
         for x in range(self.width):
             for y in range(self.height):
                 self.tiles[x, y] = Space()
+        self._add_map_edge()
         x1 = gridx
         y1 = gridy
         x2 = gridx + grid_idx.shape[0]
@@ -99,7 +107,15 @@ class Map:
         char = ent_data.loc[name, 'char']
         color = ent_data.loc[name, 'color']
         blocking = ent_data.loc[name, 'blocking']
-        return Actor(name, x, y, char, color, blocking)
+        hp = ent_data.loc[name, 'hp']
+        armor = ent_data.loc[name, 'armor']
+        att = ent_data.loc[name, 'att']
+        combat = Combat(hp, armor, att)
+        ai = HostileEnemy()
+        entity = Actor(name, x, y, char, color, blocking, combat, ai)
+        entity.combat.entity = entity
+        entity.ai.entity = entity
+        return entity
 
     def _place_ent(self, entities, ent_data, name, room):
         x = np.random.randint(room.x1+1, room.x2)
@@ -108,7 +124,7 @@ class Map:
             self._place_ent(entities, ent_data, name, room)
         else:
             entity = self._create_entity(ent_data, name, x, y)
-            entities.append(entity)
+            entities.add(entity)
 
     def populate(self, entities):
         ent_data = pd.read_csv('./data/entities.csv', index_col=0, header=0)
@@ -124,11 +140,23 @@ class Map:
                 for _ in range(num):
                     self._place_ent(entities, ent_data, name, room)
 
-    def gen_map(self, gridw, gridh, block_size, padding):
+    def gen_map(self, gridw, gridh, block_size):
         grid = Grid(gridw, gridh, block_size)
-        grid.divide_blocks(padding)
-        grid.connect_blocks()
-        gridx = (self.width - grid.tile_idx.shape[0]) // 2
-        gridy = (self.height - grid.tile_idx.shape[1]) // 2
+        grid.create_blocks()
+        gridx = (self.width - gridw) // 2
+        gridy = (self.height - gridh) // 2
         self._gen_tiles(gridx, gridy, grid.tile_idx)
         self._find_rooms()
+
+    def create_player(self):
+        startx, starty = self.get_start()
+        hp = 100
+        armor = 10
+        att = 10
+        combat = Combat(hp, armor, att)
+        ai = BaseAI()
+        player = Actor(name='player', x=startx, y=starty, char='@', color='amber',
+                       blocking=True, combat=combat, ai=ai, fov_radius=7)
+        player.combat.entity = player
+        player.ai.entity = player
+        return player

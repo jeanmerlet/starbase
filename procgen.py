@@ -50,135 +50,133 @@ class Hallway(RectRoom):
 
 
 class Block:
-    def __init__(self, size):
-        """Grid blocks.
-        tile idx:
+    def __init__(self, x1, y1, x2, y2, div_prob, min_area, padding,
+                 door_prob, tile_idx=None):
+        """Grid blocks or subblocks.
+        area: inner (floor) area
+        tile index:
         0 - wall
         1 - floor
         2 - door
+        3 - broken door
         """
-        self.s = size
-        self.tile_idx = np.ones((size, size), dtype=int)
-        self._add_outer_walls()
+        self.x1, self.x2 = x1, x2
+        self.y1, self.y2 = y1, y2
+        self.w = abs(x1 - x2) + 1
+        self.h = abs(y1 - y2) + 1
+        self.area = (self.w - 2) * (self.h - 2)
+        if tile_idx is None:
+            self.tile_idx = np.ones((self.w, self.h), dtype=int)
+        else:
+            self.tile_idx = tile_idx
+        self.div_prob = div_prob
+        self.min_area = min_area
+        self.padding = padding
+        self.door_prob = door_prob
+        self.num_div = 3
+        self._add_walls()
+        self._add_doors()
+        self._divide()
 
-    def _add_outer_walls(self):
-        self.tile_idx[:, 0] = 0
-        self.tile_idx[:, self.s - 1] = 0
-        self.tile_idx[0, :] = 0
-        self.tile_idx[self.s - 1, :] = 0
+    def _add_walls(self):
+        self.tile_idx[self.x1:self.x2+1, self.y1] = 0
+        self.tile_idx[self.x1:self.x2+1, self.y2] = 0
+        self.tile_idx[self.x1, self.y1:self.y2+1] = 0
+        self.tile_idx[self.x2, self.y1:self.y2+1] = 0
 
-    def _gen_split_xy(self, w, h, padding):
-        x = np.random.randint(1 + padding, w - padding - 1)
-        y = np.random.randint(1 + padding, h - padding - 1)
+    def _add_doors(self):
+        # exclude corners
+        self._add_door(slice(self.x1+1, self.x2), self.y1)
+        self._add_door(slice(self.x1+1, self.x2), self.y2)
+        self._add_door(self.x1, slice(self.y1+1, self.y2))
+        self._add_door(self.x2, slice(self.y1+1, self.y2))
+
+    def _add_door(self, slice_x, slice_y):
+        wall = self.tile_idx[slice_x, slice_y]
+        if np.random.rand() < self.door_prob:
+            wall[np.random.randint(len(wall))] = 2
+        else:
+            wall[np.random.randint(len(wall))] = 3
+
+    def _divide(self):
+        """Recursively divide the block based on parameters."""
+        if (self.area >= self.min_area and 
+            np.random.rand() < self.div_prob and
+            self.w > 4 and self.h > 4):
+            divx, divy = self._gen_div_xy()
+            div_angles = self._gen_div_angles()
+            self._create_subblock(divx, divy, div_angles)
+
+    def _gen_div_xy(self):
+        x1, x2 = self.x1 + 1 + self.padding, self.x2 - self.padding
+        y1, y2 = self.y1 + 1 + self.padding, self.y2 - self.padding
+        x = np.random.randint(x1, x2)
+        y = np.random.randint(y1, y2)
         return x, y
 
-    def _gen_split_angles(self, num_angles=3):
+    def _gen_div_angles(self):
         angles = [(-1, 0), (1, 0), (0, -1), (0, 1)]
-        idx = np.random.choice(len(angles), size=num_angles, replace=False)
-        split_angles = [angles[x] for x in idx]
-        return split_angles
+        idx = np.random.choice(len(angles), size=self.num_div, replace=False)
+        div_angles = [angles[x] for x in idx]
+        return div_angles
 
-    def _add_inner_wall(self, x, y, angle):
-        dest_xy = tuple(np.add((x, y), angle))
-        walls = []
-        while self.tile_idx[dest_xy] != 0:
-            self.tile_idx[dest_xy] = 0
-            walls.append(dest_xy)
-            x, y = dest_xy
-            dest_xy = tuple(np.add((x, y), angle))
-        door_xy = walls[np.random.choice(len(walls))]
-        self.tile_idx[door_xy] = 2
-
-    def _split(self, splitx, splity, angles):
-        self.tile_idx[splitx, splity] = 0
-        for angle in angles:
-            self._add_inner_wall(splitx, splity, angle)
-
-    def _rooms(self, x, y, angles):
-        # not needed, will do rooms in map
-        rooms = []
+    def _create_subblock(self, divx, divy, angles):
+        """This assumes 3 angles."""
         if (-1, 0) in angles and (1, 0) in angles:
             if (0, -1) in angles:
-                rooms.append(RectRoom(0, 0, x, y))
-                rooms.append(RectRoom(x, 0, self.s-1, y))
-                rooms.append(RectRoom(0, y, self.s-1, self.s-1))
-            if (0, 1) in angles:
-                rooms.append(RectRoom(0, 0, self.s-1, y))
-                rooms.append(RectRoom(0, y, x, self.s-1))
-                rooms.append(RectRoom(x, y, self.s-1, self.s-1))
-        if (0, -1) in angles and (0, 1) in angles:
+                corner_pairs = [(self.x1, self.y1, divx, divy),
+                                (divx, self.y1, self.x2, divy),
+                                (self.x1, divy, self.x2, self.y2)]
+            else:
+                corner_pairs = [(self.x1, self.y1, self.x2, divy),
+                                (self.x1, divy, divx, self.y2),
+                                (divx, divy, self.x2, self.y2)]
+        else:
             if (-1, 0) in angles:
-                rooms.append(RectRoom(0, 0, x, y, dx, dy))
-                rooms.append(RectRoom(0, y, x, self.s-1, dx, dy))
-                rooms.append(RectRoom(x, 0, self.s-1, self.s-1))
-            if (1, 0) in angles:
-                rooms.append(RectRoom(0, 0, x, self.s-1, dx, dy))
-                rooms.append(RectRoom(x, 0, self.s-1, y, dx, dy))
-                rooms.append(RectRoom(x, y, self.s-1, self.s-1))
-        return rooms
-
-    def divide(self, padding):
-        """Split block into rooms and hallways.
-        The edge coords are all walls.
-
-        padding: minimum number of tiles from a wall that 
-                 a split point can be picked
-        """
-        splitx, splity = self._gen_split_xy(self.s, self.s, padding)
-        split_angles = self._gen_split_angles()
-        self._split(splitx, splity, split_angles)
-        #rooms = self._rooms(splitx, splity, split_angles)
-        #return rooms
+                corner_pairs = [(self.x1, self.y1, divx, divy),
+                                (divx, self.y1, self.x2, self.y2),
+                                (self.x1, divy, divx, self.y2)]
+            else:
+                corner_pairs = [(self.x1, self.y1, divx, self.y2),
+                                (divx, self.y1, self.x2, divy),
+                                (divx, divy, self.x2, self.y2)]
+        for corner_pair in corner_pairs: 
+            Block(*corner_pair, self.div_prob, self.min_area, self.padding,
+                     self.door_prob, self.tile_idx)
 
 
 class Grid:
     def __init__(self, w, h, block_size):
         self.w = w
         self.h = h
-        self.size = block_size
-        total_w = (block_size * w) - (w - 1)
-        total_h = (block_size * h) - (h - 1)
-        self.tile_idx = np.zeros((total_w, total_h), dtype=int)
+        self.block_size = block_size
+        self.num_blocks_x = w // block_size
+        self.num_blocks_y = h // block_size
+        tiles_w = (block_size - 1) * self.num_blocks_x + 1
+        tiles_h = (block_size - 1) * self.num_blocks_y + 1
+        self.tile_idx = np.zeros((tiles_w, tiles_h), dtype=int)
 
-    def _add_block_to_tile_idx(self, x, y, block):
-        x1, y1 = x * self.size, y * self.size
-        x2, y2 = (x+1) * self.size, (y+1) * self.size
-        if x > 0:
-            x1 -= x
-            x2 -= x
-        if y > 0:
-            y1 -= y
-            y2 -= y
-        self.tile_idx[x1: x2, y1: y2] = block.tile_idx
-
-    def divide_blocks(self, padding):
-        rooms = []
-        for x in range(self.w):
-            for y in range(self.h):
-                block = Block(self.size)
-                block.divide(padding)
+    def create_blocks(self):
+        for x in range(self.num_blocks_x):
+            for y in range(self.num_blocks_y):
+                x1, y1 = 0, 0
+                x2, y2 = self.block_size - 1, self.block_size - 1
+                if np.random.rand() < 0.2:
+                    min_area = 256
+                    padding = 2
+                    div_prob = 0.9
+                else:
+                    min_area = 64
+                    padding = 1
+                    div_prob = 1
+                door_prob = 0.7
+                block = Block(x1, y1, x2, y2, div_prob, min_area, padding,
+                              door_prob)
                 self._add_block_to_tile_idx(x, y, block)
 
-    def connect_blocks(self):
-        for x in range(0, self.w):
-            v_wall_x = (x * self.size) - x
-            h_wall_minx = (x * self.size) + 1 - x
-            h_wall_maxx = (x * self.size) + self.size - x - 1
-            for y in range(0, self.h):
-                v_wall_miny = (y * self.size) + 1 - y
-                v_wall_maxy = (y * self.size) + self.size - y - 1
-                v_walls = [(v_wall_x, z) for z in range(v_wall_miny, v_wall_maxy)]
-                num_doors = 2 if np.random.rand() < 0.25 else 1
-                v_wall_idx = np.random.choice(len(v_walls), size=num_doors, replace=False)
-                v_doors = [v_walls[idx] for idx in v_wall_idx]
-                for door in v_doors:
-                    if x == 0: break
-                    self.tile_idx[door] = 2
-                h_wall_y = (y * self.size) - y
-                h_walls = [(z, h_wall_y) for z in range(h_wall_minx, h_wall_maxx)]
-                num_doors = 2 if np.random.rand() < 0.25 else 1
-                h_wall_idx = np.random.choice(len(h_walls), size=num_doors, replace=False)
-                h_doors = [h_walls[idx] for idx in h_wall_idx]
-                for door in h_doors:
-                    if y == 0: break
-                    self.tile_idx[door] = 2
+    def _add_block_to_tile_idx(self, x, y, block):
+        x1 = x * self.block_size - x
+        y1 = y * self.block_size - y
+        x2 = (x + 1) * (self.block_size) - x
+        y2 = (y + 1) * (self.block_size) - y
+        self.tile_idx[x1: x2, y1: y2] = block.tile_idx

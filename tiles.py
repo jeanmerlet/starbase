@@ -39,8 +39,8 @@ class Airlock(Tile):
 
 class Space(Tile):
     def __init__(self):
-        super().__init__(' ', 'black', 'dark gray', True, False)
+        super().__init__('\u2592', 'black', 'dark gray', True, False)
 
-class Fog(Tile):
+class MapEdge(Tile):
     def __init__(self):
-        super().__init__(' ', 'black', 'black', True, False)
+        super().__init__('.', 'black', 'black', False, True)
