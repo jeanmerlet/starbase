@@ -5,7 +5,8 @@ from bearlibterminal import terminal as blt
 SCREEN_WIDTH = 160
 SCREEN_HEIGHT = 55
 
-SIDE_PANEL_WIDTH = 44
+SIDE_PANEL_WIDTH = 24
+VERT_PANEL_HEIGHT = 5
 
 # map
 MAP_WIDTH = 160

@@ -29,14 +29,42 @@ class DisplayBar:
                 blt.print(self.x+i, self.y+1, self.empty_bar_tile)
 
 
+class DisplayLog:
+    def __init__(self, x, y, width, height):
+        self.x, self.y = x, y
+        self.max_h = y + height
+        self.new_msgs, self.old_msgs = [], []
+
+    def update(self, msgs):
+        self.new_msgs = msgs
+
+    def render(self):
+        for msg in self.new_msgs:
+            if self.y == self.max_h:
+                pass
+            else:
+                blt.print(self.x, self.y, msg)
+                self.old_msgs.append(msg)
+                self.y += 1
+        self.new_msgs = []
+        
+
 class GUI:
     def __init__(self, hp, max_hp):
-        hp_x = config.SCREEN_WIDTH - config.SIDE_PANEL_WIDTH + 2
-        hp_y = 1
-        self.hp_bar = DisplayBar(hp_x, hp_y, 20, 'HP', 'red', hp, max_hp)
+        hpx = config.SCREEN_WIDTH - config.SIDE_PANEL_WIDTH + 2
+        hpy = 1
+        logx = 1
+        logy = config.SCREEN_HEIGHT - config.VERT_PANEL_HEIGHT
+        self.hp_bar = DisplayBar(hpx, hpy, 20, 'hp', 'red', hp, max_hp)
+        #self.shields_bar = DisplayBar(hpx, hpy, 20, 'shields', 'blue', 
+        #                              shields, max_shields)
+        self.log = DisplayLog(logx, logy, 60, 5)
 
     def render(self):
         self.hp_bar.render()
+        self.log.render()
 
-    def update(self, player):
+    def update(self, player, msgs):
         self.hp_bar.update(player.combat.hp)
+        self.log.update(msgs)
+        #self.shields_bar.update(player.combat.shields)

@@ -16,7 +16,7 @@ class Engine:
         self.fov = fov
         self._update_fov()
         self.gui = gui
-        self.gui.update(self.player)
+        self.gui.update(self.player, ['meow'])
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
@@ -42,10 +42,10 @@ class Engine:
         action.perform(self, self.player)
         self._handle_enemy_turns()
         self._update_fov()
-        self.gui.update(self.player)
+        self.gui.update(self.player, [''])
 
     def render(self):
-        blt.clear()
+        blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
             if self.game_map.visible[ent.x, ent.y]:

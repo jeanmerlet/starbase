@@ -6,12 +6,22 @@ class Combat:
     def __init__(self, hp, armor, att):
         self.hp = hp
         self.max_hp = hp
+        #self.shields = shields
+        #self.max_shields = shields
+        #self.charge_delay = charge_delay
+        #self.base_armor = armor
         self.armor = armor
         self.att = att
 
     def set_hp(self, value):
         self.hp = min(value, self.max_hp)
         if self.hp <= 0: self._die()
+
+    def set_shields(self, value):
+        pass
+        #self.shields = min(value, self.max_shields)
+        #if self.shields <= 0:
+        #    self.shields.broken = True
 
     def is_alive(self):
         return True if self.hp > 0 else False
