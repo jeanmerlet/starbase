@@ -4,14 +4,17 @@ from actions import Action, MeleeAction, MoveAction, WaitAction
 
 class Combat:
     def __init__(self, hp, armor, att):
-        self.max_hp = hp
         self.hp = hp
+        self.max_hp = hp
         self.armor = armor
         self.att = att
 
     def set_hp(self, value):
         self.hp = min(value, self.max_hp)
         if self.hp <= 0: self._die()
+
+    def is_alive(self):
+        return True if self.hp > 0 else False
 
     def _die(self):
         if self.entity.name == 'player':
@@ -25,6 +28,7 @@ class Combat:
         self.entity.blocking = False
         self.entity.ai = None
         self.entity.render_order = 2
+        # implement changing event_handler with death_msg return
 
 
 class BaseAI(Action):
@@ -50,8 +54,10 @@ class HostileEnemy(BaseAI):
                 dx = targetx - self.entity.x
                 dy = targety - self.entity.y
                 return MoveAction(dx, dy)
-        else:
+        elif target:
             return self._move_towards(target, tiles)
+        else:
+            return WaitAction()
 
     def _move_towards(self, target, tiles):
         dx = target.x - self.entity.x

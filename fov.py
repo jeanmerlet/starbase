@@ -23,7 +23,8 @@ class FieldOfView:
                              self.MULT[0, octant], self.MULT[1, octant],
                              self.MULT[2, octant], self.MULT[3, octant])
 
-    def _cast_light(self, visible, ox, oy, radius, row, start, end, xx, xy, yx, yy):
+    def _cast_light(self, visible, ox, oy, radius, row,
+                    start, end, xx, xy, yx, yy):
         if start < end:
             return
 

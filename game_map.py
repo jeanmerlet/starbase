@@ -151,12 +151,13 @@ class Map:
     def create_player(self):
         startx, starty = self.get_start()
         hp = 100
-        armor = 10
+        armor = 0
         att = 10
         combat = Combat(hp, armor, att)
         ai = BaseAI()
-        player = Actor(name='player', x=startx, y=starty, char='@', color='amber',
-                       blocking=True, combat=combat, ai=ai, fov_radius=7)
+        player = Actor(name='player', x=startx, y=starty, char='@',
+                       color='amber', blocking=True, combat=combat, ai=ai,
+                       fov_radius=7)
         player.combat.entity = player
         player.ai.entity = player
         return player

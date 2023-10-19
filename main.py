@@ -1,25 +1,32 @@
 from bearlibterminal import terminal as blt
-from event_handler import EventHandler
+from event_handlers import *
 from game_map import Map
 from entities import Entity, Actor
 from fov import FieldOfView as Fov
+import config
+from display import GUI
 
 
 class Engine:
-    def __init__(self, event_handler, game_map, player, entities, fov):
+    def __init__(self, event_handler, game_map, player, entities, fov, gui):
         self.event_handler = event_handler
         self.game_map = game_map
         self.player = player
         self.entities = entities
         self.fov = fov
         self._update_fov()
+        self.gui = gui
+        self.gui.update(self.player)
+
+    def _get_render_sorted_entities(self):
+        return sorted(self.entities, key=lambda x: -x.render_order)
 
     def _handle_enemy_turns(self):
-        target = self.player
         visible = self.game_map.visible
         tiles = self.game_map.tiles
         for entity in self.entities - {self.player}:
             if entity.ai:
+                target = self.player if self.player.combat.is_alive() else None
                 action = entity.ai.get_action(target, visible, tiles)
                 action.perform(self, entity)
 
@@ -35,9 +42,7 @@ class Engine:
         action.perform(self, self.player)
         self._handle_enemy_turns()
         self._update_fov()
-
-    def _get_render_sorted_entities(self):
-        return sorted(self.entities, key=lambda x: -x.render_order)
+        self.gui.update(self.player)
 
     def render(self):
         blt.clear()
@@ -45,6 +50,7 @@ class Engine:
         for ent in self._get_render_sorted_entities():
             if self.game_map.visible[ent.x, ent.y]:
                 ent.render(blt)
+        self.gui.render()
         blt.refresh()
 
     def get_blocking_entity(self, x, y):
@@ -53,35 +59,28 @@ class Engine:
                 return ent
         return None
 
+    def load_terminal_settings(self):
+        self.settings = config.TerminalSettings()
+
 
 def main():
-    screen_width = 160
-    screen_height = 55
-    map_width = 160
-    map_height = 50
-    gridw = 100
-    gridh = 40
-    block_size = 20
-    padding = 1
-
-    event_handler = EventHandler()
-    game_map = Map(map_width, map_height)
-    game_map.gen_map(gridw, gridh, block_size)
+    event_handler = MainGameEventHandler()
+    game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
+    game_map.gen_map(config.GRIDW, config.GRIDH, config.BLOCK_SIZE)
     player = game_map.create_player()
     entities = {player}
     game_map.populate(entities)
     fov = Fov(game_map.opaque)
-    engine = Engine(event_handler, game_map, player, entities, fov)
+    gui = GUI(player.combat.hp, player.combat.max_hp)
+    engine = Engine(event_handler, game_map, player, entities, fov, gui)
 
     blt.open()
-    blt.set(f'window.size={screen_width}x{screen_height}')
-    blt.set('palette.blue = 0,102,204')
-    blt.set('palette.l_stl = 160,160,160')
-    blt.set('palette.d_stl = 32,32,32')
+    engine.load_terminal_settings()
     while True:
         engine.render()
-        while blt.has_input():
-            engine.handle_event()
+        engine.handle_event()
+        #while blt.has_input():
+            #engine.handle_event()
 
 
 if __name__ == "__main__":

@@ -14,7 +14,8 @@ class Entity:
 
 
 class Actor(Entity):
-    def __init__(self, name, x, y, char, color, blocking, combat, ai, fov_radius=None):
+    def __init__(self, name, x, y, char, color, blocking, combat, ai,
+                 fov_radius=None):
         super().__init__(name, x, y, char, color, blocking, render_order=0)
         self.combat = combat
         self.ai = ai

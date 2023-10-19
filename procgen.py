@@ -92,9 +92,9 @@ class Block:
 
     def _divide(self):
         """Recursively divide the block based on parameters."""
-        if (self.area >= self.min_area and 
-            np.random.rand() < self.div_prob and
-            self.w > 4 and self.h > 4):
+        if (self.area >= self.min_area
+            and np.random.rand() < self.div_prob
+            and self.w > 4 and self.h > 4):
             divx, divy = self._gen_div_xy()
             div_angles = self._gen_div_angles()
             self._create_subblock(divx, divy, div_angles)
@@ -133,8 +133,8 @@ class Block:
                                 (divx, self.y1, self.x2, divy),
                                 (divx, divy, self.x2, self.y2)]
         for corner_pair in corner_pairs: 
-            Block(*corner_pair, self.div_prob, self.min_area, self.padding,
-                     self.door_prob, self.tile_idx)
+            Block(*corner_pair, self.div_prob, self.min_area,
+                  self.padding, self.door_prob, self.tile_idx)
 
 
 class Grid:
