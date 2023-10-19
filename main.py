@@ -18,17 +18,20 @@ class Engine:
         self.gui = gui
         self.gui.update(self.player, [])
 
-    def _get_render_sorted_entities(self):
-        return sorted(self.entities, key=lambda x: -x.render_order)
+    def _get_dist_sorted_entities(self, entities):
+        key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
+        return sorted(entities, key=key)
 
     def _handle_enemy_turns(self):
         visible = self.game_map.visible
         tiles = self.game_map.tiles
         msgs = []
-        for entity in self.entities - {self.player}:
+        entities = self.entities - {self.player}
+        entities = self._get_dist_sorted_entities(entities)
+        for entity in entities:
             if entity.ai:
                 target = self.player if self.player.combat.is_alive() else None
-                action = entity.ai.get_action(target, visible, tiles)
+                action = entity.ai.get_action(self, target, visible, tiles)
                 msgs += action.perform(self, entity)
         return msgs
 
@@ -50,6 +53,9 @@ class Engine:
         self._update_fov()
         self.gui.update(self.player, msgs)
 
+    def _get_render_sorted_entities(self):
+        return sorted(self.entities, key=lambda x: -x.render_order)
+
     def render(self):
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
@@ -67,6 +73,9 @@ class Engine:
 
     def load_terminal_settings(self):
         self.settings = config.TerminalSettings()
+
+    def game_over(self):
+        self.event_handler = GameOverEventHandler()
 
 
 def main():
