@@ -2,7 +2,8 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor
-from components import Combat, BaseAI, HostileEnemy
+from components import Combat
+from ai import BaseAI, HostileEnemy
 from tiles import *
 
 

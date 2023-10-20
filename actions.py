@@ -103,3 +103,8 @@ class CheckAction(DirectedAction):
             return MeleeAction(self.dx, self.dy).perform(engine, entity)
         else:
             return MoveAction(self.dx, self.dy).perform(engine, entity)
+
+
+class ItemAction(Action):
+    def perform(self, engine, entity):
+        pass
