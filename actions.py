@@ -15,7 +15,7 @@ class DeathAction(Action):
             self.msgs.append('You have DIED.')
             engine.game_over()
         else:
-            self.msgs.append(f'{entity.name.capitalize()} dies.')
+            self.msgs.append(f'The {entity.name} dies.')
         entity.name = f'{entity.name} corpse'
         entity.char = '%'
         entity.color = 'dark red'
@@ -65,19 +65,21 @@ class MeleeAction(DirectedAction):
             self.msgs.append('Nothing there.')
         else:
             dam = int(entity.combat.att - target.combat.armor)
+            if entity is engine.player:
+                subj = 'You'
+                verb = 'hit'
+                obj = f'the {target.name}'
+            else:
+                subj = f'The {entity.name}'
+                verb = 'hits'
+                obj = 'you'
             if dam > 0:
-                if entity is engine.player:
-                    name = 'you'
-                    verb = 'hit'
-                else:
-                    name = entity.name
-                    verb = 'hits'
-                self.msgs.append(f'{name.capitalize()} {verb} {target.name} for {dam} damage.')
+                self.msgs.append(f'{subj} {verb} {obj} for {dam} damage.')
                 target.combat.set_hp(target.combat.hp - dam)
                 if not target.combat.is_alive():
                     self.msgs += DeathAction().perform(engine, target)
             else:
-                self.msgs.append(f'{entity.name} attacks {target.name} but does no damage.')
+                self.msgs.append(f'{subj} {verb} {obj} but does no damage.')
         return self.msgs
 
 

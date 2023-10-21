@@ -29,7 +29,7 @@ class Consumable:
     def get_action(self, consumer):
         return ItemAction(consumer, self.entity)
 
-    def activate(self, action)
+    def activate(self, action):
         raise NotImplementedError()
 
 
