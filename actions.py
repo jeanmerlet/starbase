@@ -57,7 +57,16 @@ class DirectedAction(Action):
         return dest_x, dest_y
 
 
-class MeleeAction(DirectedAction):
+class AttackAction(DirectedAction):
+    def perform(self, engine, entity):
+        raise NotImplementedError()
+
+    def _check_for_death(self, engine, target):
+        if not target.combat.is_alive():
+            self.msgs += DeathAction().perform(engine, target)
+
+
+class MeleeAction(AttackAction):
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         target = engine.get_blocking_entity(dest_x, dest_y)
@@ -76,10 +85,9 @@ class MeleeAction(DirectedAction):
             if dam > 0:
                 self.msgs.append(f'{subj} {verb} {obj} for {dam} damage.')
                 target.combat.set_hp(target.combat.hp - dam)
-                if not target.combat.is_alive():
-                    self.msgs += DeathAction().perform(engine, target)
             else:
                 self.msgs.append(f'{subj} {verb} {obj} but does no damage.')
+        self._check_for_death(engine, target)
         return self.msgs
 
 

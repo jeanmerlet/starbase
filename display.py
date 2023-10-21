@@ -97,7 +97,7 @@ class GUI:
         self.hp_bar = DisplayBar(hpx, hpy, 20, 'Health', 'red', hp, max_hp)
         #self.shields_bar = DisplayBar(hpx, hpy, 20, 'shields', 'blue', 
         #                              shields, max_shields)
-        self.log = DisplayLog(logx, logy, 20, 5)
+        self.log = DisplayLog(logx, logy, hpx - 1, 5)
 
     def render(self):
         self.hp_bar.render()
