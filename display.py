@@ -89,21 +89,22 @@ class DisplayLog:
         
 
 class GUI:
-    def __init__(self, hp, max_hp):
+    def __init__(self, hp, max_hp, shields, max_shields):
         hpx = config.SCREEN_WIDTH - config.SIDE_PANEL_WIDTH
         hpy = 1
         logx = 2
         logy = config.SCREEN_HEIGHT - config.VERT_PANEL_HEIGHT
         self.hp_bar = DisplayBar(hpx, hpy, 20, 'Health', 'red', hp, max_hp)
-        #self.shields_bar = DisplayBar(hpx, hpy, 20, 'shields', 'blue', 
-        #                              shields, max_shields)
+        self.shields_bar = DisplayBar(hpx, hpy + 3, 20, 'Shields', 'blue', 
+                                      shields, max_shields)
         self.log = DisplayLog(logx, logy, hpx - 1, 5)
 
     def render(self):
         self.hp_bar.render()
+        self.shields_bar.render()
         self.log.render()
 
     def update(self, player, msgs):
         self.hp_bar.update(player.combat.hp)
+        self.shields_bar.update(player.combat.shields.hp)
         self.log.update(msgs)
-        #self.shields_bar.update(player.combat.shields)

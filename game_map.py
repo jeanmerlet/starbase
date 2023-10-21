@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor
-from components import Combat
+from components import Combat, Shields
 from ai import BaseAI, HostileEnemy
 from tiles import *
 
@@ -111,11 +111,17 @@ class Map:
         hp = ent_data.loc[name, 'hp']
         armor = ent_data.loc[name, 'armor']
         att = ent_data.loc[name, 'att']
-        combat = Combat(hp, armor, att)
+        #shields_hp = 0
+        #shields_charge_rate = 0
+        #shields_charge_delay = 3
+        #shields = Shield(shields_hp, shields_charge_rate, shields, charge_delay)
+        shields = None
+        combat = Combat(hp, armor, shields, att)
         ai = HostileEnemy()
         entity = Actor(name, x, y, char, color, blocking, combat, ai)
         entity.combat.entity = entity
         entity.ai.entity = entity
+        combat = Combat(hp, armor, shields, att)
         return entity
 
     def _place_ent(self, entities, ent_data, name, room):
@@ -154,7 +160,11 @@ class Map:
         hp = 100
         armor = 0
         att = 10
-        combat = Combat(hp, armor, att)
+        shields_hp = 20
+        shields_charge_rate = 5
+        shields_charge_delay = 3
+        shields = Shields(shields_hp, shields_charge_rate, shields_charge_delay)
+        combat = Combat(hp, armor, shields, att)
         ai = BaseAI()
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', blocking=True, combat=combat, ai=ai,

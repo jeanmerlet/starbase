@@ -51,6 +51,7 @@ class Engine:
 
     def _update_all(self, msgs):
         self._update_fov()
+        self.player.combat.shields.update()
         self.gui.update(self.player, msgs)
 
     def _get_render_sorted_entities(self):
@@ -86,7 +87,8 @@ def main():
     entities = {player}
     game_map.populate(entities)
     fov = Fov(game_map.opaque)
-    gui = GUI(player.combat.hp, player.combat.max_hp)
+    gui = GUI(player.combat.hp, player.combat.max_hp,
+              player.combat.shields.hp, player.combat.shields.max_hp)
     engine = Engine(event_handler, game_map, player, entities, fov, gui)
 
     blt.open()
