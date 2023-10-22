@@ -65,6 +65,12 @@ class AttackAction(DirectedAction):
         if not target.combat.is_alive():
             self.msgs += DeathAction().perform(engine, target)
 
+    def _attack(self, entity, target):
+        dam = int(entity.combat.att - target.combat.armor)
+        if target.combat.shields:
+            dam = target.combat.shields.take_hit(dam)
+        return dam
+
 
 class MeleeAction(AttackAction):
     def perform(self, engine, entity):
@@ -73,7 +79,7 @@ class MeleeAction(AttackAction):
         if not target:
             self.msgs.append('Nothing there.')
         else:
-            dam = int(entity.combat.att - target.combat.armor)
+            dam = self._attack(entity, target)
             if entity is engine.player:
                 subj = 'You'
                 verb = 'hit'

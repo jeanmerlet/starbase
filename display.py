@@ -4,15 +4,15 @@ import config
 
 
 class DisplayBar:
-    def __init__(self, x, y, length, name, color, value, max_value):
+    def __init__(self, x, y, length, name, lcolor, dcolor, value, max_value):
         self.x, self.y = x, y
         self.length = length
         self.max_length = length
         self.name = name
         self.value = value
         self.max_value = max_value
-        self.full_bar_tile = f'[color=darker {color}]\u2588[/color]'
-        self.empty_bar_tile = f'[color=darkest {color}]\u2588[/color]'
+        self.full_bar_tile = f'[color={lcolor}]\u2588[/color]'
+        self.empty_bar_tile = f'[color={dcolor}]\u2588[/color]'
         self.bg = ' ' * self.length
 
     def update(self, value):
@@ -94,8 +94,10 @@ class GUI:
         hpy = 1
         logx = 2
         logy = config.SCREEN_HEIGHT - config.VERT_PANEL_HEIGHT
-        self.hp_bar = DisplayBar(hpx, hpy, 20, 'Health', 'red', hp, max_hp)
-        self.shields_bar = DisplayBar(hpx, hpy + 3, 20, 'Shields', 'blue', 
+        self.hp_bar = DisplayBar(hpx, hpy, 20, 'Health', 'dark red',
+                                 'darker red', hp, max_hp)
+        self.shields_bar = DisplayBar(hpx, hpy + 3, 20, 'Shields',
+                                      'light blue', 'darker blue',
                                       shields, max_shields)
         self.log = DisplayLog(logx, logy, hpx - 1, 5)
 

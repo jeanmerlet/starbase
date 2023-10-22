@@ -25,13 +25,11 @@ class Shields:
         self.charge_delay = charge_delay
         self.time_until_charge = charge_delay
 
-    def _break_shield(self):
-        self.time_until_charge = self.charge_delay
-
-    def take_hit(self, value):
-        breakthrough = value - self.hp
-        self.hp = min(0, max(value, self.max_hp))
-        if self.hp == 0: self._break_shield()
+    def take_hit(self, dam):
+        self.time_until_charge = self.charge_delay + 1
+        breakthrough = dam - self.hp
+        self.hp -= dam
+        if self.hp <= 0: self.hp = 0
         return breakthrough
 
     def charge(self):
