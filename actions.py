@@ -1,3 +1,7 @@
+import config
+from display import MenuDisplay
+
+
 class Action:
     def __init__(self):
         self.msgs = []
@@ -149,7 +153,20 @@ class DropAction(Action):
 
 class OpenInventoryAction(Action):
     def perform(self, engine, entity):
-        pass
+        w = config.INVENTORY_WIDTH
+        h = len(entity.inventory.items) + 2
+        x = (config.SCREEN_WIDTH - config.INVENTORY_WIDTH) // 2
+        y = (config.SCREEN_HEIGHT - h) // 2
+        menu_items = entity.inventory.items
+        engine.gui.menu = MenuDisplay(x, y, w, h, menu_items)
+        return self.msgs
+
+
+class CloseInventoryAction(Action):
+    def perform(self, engine, entity):
+        engine.gui.menu = None
+        return self.msgs
+
 
 class ItemAction(Action):
     def perform(self, engine, entity):

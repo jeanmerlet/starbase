@@ -3,9 +3,14 @@ import textwrap
 import config
 
 
-class DisplayBar:
-    def __init__(self, x, y, length, name, lcolor, dcolor, value, max_value):
+class Display:
+    def __init__(self, x, y):
         self.x, self.y = x, y
+
+
+class BarDisplay(Display):
+    def __init__(self, x, y, length, name, lcolor, dcolor, value, max_value):
+        super().__init__(x, y)
         self.length = length
         self.max_length = length
         self.name = name
@@ -30,9 +35,9 @@ class DisplayBar:
                 blt.print(self.x+i, self.y+1, self.empty_bar_tile)
 
 
-class DisplayLog:
+class LogDisplay(Display):
     def __init__(self, x, y, w, h):
-        self.x, self.y = x, y
+        super().__init__(x, y)
         self.orig_y = y
         self.w, self.h = w, h
         self.max_h = y + h
@@ -86,7 +91,24 @@ class DisplayLog:
             self.y += 1
         self.old_msgs += self.new_msgs
         self.new_msgs = []
-        
+
+
+class MenuDisplay(Display):
+    def __init__(self, x, y, w, h, menu_items):
+        super().__init__(x, y)
+        self.orig_y = y
+        self.w, self.h = w, h
+        self.menu_items = menu_items
+
+    def render(self):
+        blt.clear_area(self.x, self.y, self.w, self.h)
+        self.y += 1
+        menu_idx = list(map(chr, range(97, 123)))
+        for i, item in enumerate(self.menu_items):
+            text = f' {menu_idx[i]}. [color={item.color}]{item.name}[/color]'
+            blt.print(self.x, self.y, text)
+            self.y += 1
+
 
 class GUI:
     def __init__(self, hp, max_hp, shields, max_shields):
@@ -94,17 +116,19 @@ class GUI:
         hpy = 1
         logx = 2
         logy = config.SCREEN_HEIGHT - config.VERT_PANEL_HEIGHT
-        self.hp_bar = DisplayBar(hpx, hpy, 20, 'Health', 'dark red',
+        self.hp_bar = BarDisplay(hpx, hpy, 20, 'Health', 'dark red',
                                  'darker red', hp, max_hp)
-        self.shields_bar = DisplayBar(hpx, hpy + 3, 20, 'Shields',
+        self.shields_bar = BarDisplay(hpx, hpy + 3, 20, 'Shields',
                                       'light blue', 'darker blue',
                                       shields, max_shields)
-        self.log = DisplayLog(logx, logy, hpx - 1, 5)
+        self.log = LogDisplay(logx, logy, hpx - 1, 5)
+        self.menu = None
 
     def render(self):
         self.hp_bar.render()
         self.shields_bar.render()
         self.log.render()
+        if self.menu: self.menu.render()
 
     def update(self, player, msgs):
         self.hp_bar.update(player.combat.hp)

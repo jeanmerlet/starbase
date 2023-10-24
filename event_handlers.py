@@ -21,6 +21,7 @@ WAIT = {
 INVENTORY = {
     blt.TK_KP_2: 'scroll_up',
     blt.TK_KP_8: 'scroll_down',
+    blt.TK_ESCAPE: 'exit'
 }
 
 MENU = {
@@ -67,7 +68,11 @@ class MainGameEventHandler(EventHandler):
 class InventoryEventHandler(EventHandler):
     def dispatch(self, event):
         if event in INVENTORY:
-            action = None
+            command = INVENTORY[event]
+            if command == 'exit':
+                action = CloseInventoryAction()
+            else:
+                action = None
         elif event in list(range(4, 30)):
             letter = chr(event + 93)
             action = DropAction(letter)
