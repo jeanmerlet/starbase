@@ -1,4 +1,5 @@
-name,char,color,blocking,prob,min_num,max_num,dgn_lvl,hp,armor,att
-skitterling,s,dark purple,True,0.4,1,4,1,8,1,3
-rustbot,R,darker red,True,0.1,1,1,1,40,2,4
-none,,,,0.5,,,1,,,
+name,class,char,color,blocking,hp,base_armor,base_defense,base_attack,damage,equip_time,armor_bonus,def_bonus,att_bonus,dam_bonus
+skitterling,actor,s,dark purple,True,8,0,2,4,1d2,None,0,0,0,0
+rustbot,actor,R,darker red,True,25,2,0,8,1d8,None,0,0,0,0
+kevlar,equippable,[[,dark green,False,None,None,None,None,None,1,2,-1,0,0
+plated kevlar,equippable,[[,darker green,False,None,None,None,None,None,2,4,-2,-1,0

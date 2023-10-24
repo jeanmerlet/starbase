@@ -39,13 +39,13 @@ class HostileEnemy(BaseAI):
             dy = 0 if dy == 0 else (1 if dy > 0 else -1)
             dest_x, dest_y = self.entity.x + dx, self.entity.y + dy
             if (tiles[dest_x, dest_y].walkable and not
-                engine.get_blocking_entity(dest_x, dest_y)):
+                engine.get_blocking_entity_at_xy(dest_x, dest_y)):
                 return MoveAction(dx, dy)
             elif (tiles[dest_x, self.entity.y].walkable and not
-                engine.get_blocking_entity(dest_x, self.entity.y)):
+                engine.get_blocking_entity_at_xy(dest_x, self.entity.y)):
                 return MoveAction(dx, 0)
             elif (tiles[self.entity.x, dest_y].walkable and not
-                engine.get_blocking_entity(self.entity.x, dest_y)):
+                engine.get_blocking_entity_at_xy(self.entity.x, dest_y)):
                 return MoveAction(0, dy)
             else:
                 return WaitAction()

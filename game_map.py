@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
-from entities import Entity, Actor
-from components import Combat, Shields
+from entities import Entity, Actor, Equippable
+from components import Combat, Shields, Inventory
 from ai import BaseAI, HostileEnemy
 from tiles import *
 
@@ -14,6 +14,11 @@ class Map:
         2: ClosedDoor(),
         3: BrokenDoor()
     }
+    ENT_ID = {
+        'actor': Actor,
+        'equippable': Equippable
+    }
+    ENT_DATA = pd.read_csv('./data/entities.csv', index_col=0, header=0)
 
     def __init__(self, width, height):
         self.width = width
@@ -34,13 +39,13 @@ class Map:
                     else:
                         blt.print(x, y, self.tiles[x, y].dark_icon)
 
-    def get_start(self):
+    def _get_start_xy(self):
         x = np.random.randint(self.width)
         y = np.random.randint(self.height)
         if isinstance(self.tiles[x, y], Floor):
             return x, y
         else:
-            return self.get_start()
+            return self._get_start_xy()
 
     def in_bounds(self, x, y):
         return 0 <= x < self.width and 0 <= y < self. height
@@ -104,48 +109,69 @@ class Map:
                 else:
                     checked[x, y] = True
 
-    def _create_entity(self, ent_data, name, x, y):
-        char = ent_data.loc[name, 'char']
-        color = ent_data.loc[name, 'color']
-        blocking = ent_data.loc[name, 'blocking']
-        hp = ent_data.loc[name, 'hp']
-        armor = ent_data.loc[name, 'armor']
-        att = ent_data.loc[name, 'att']
-        #shields_hp = 0
-        #shields_charge_rate = 0
-        #shields_charge_delay = 3
-        #shields = Shield(shields_hp, shields_charge_rate, shields, charge_delay)
-        shields = None
-        combat = Combat(hp, armor, shields, att)
-        ai = HostileEnemy()
-        entity = Actor(name, x, y, char, color, blocking, combat, ai)
-        entity.combat.entity = entity
-        entity.ai.entity = entity
-        combat = Combat(hp, armor, shields, att)
-        return entity
+    def _roll_entities(self):
+        #TODO: get sets of entities larger than size 1
+        # (e.g. multiple skitterlings or robot and kevlar)
+        # make another csv table for these sets
+        if np.random.rand() < 0.25: return None
+        dist = [0.8, 0.1, 0.09, 0.01]
+        idx = np.arange(4)
+        name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
+        return name_set
 
-    def _place_ent(self, entities, ent_data, name, room):
+    def _roll_entity_xy(self, room, entities):
         x = np.random.randint(room.x1+1, room.x2)
         y = np.random.randint(room.y1+1, room.y2)
         if np.any([ent.x == x and ent.y == y for ent in entities]):
-            self._place_ent(entities, ent_data, name, room)
+            return self._roll_entity_xy(room, entities)
         else:
-            entity = self._create_entity(ent_data, name, x, y)
-            entities.add(entity)
+            return x, y
+
+    def _get_entity_properties(self, name):
+        props = {}
+        for col in self.ENT_DATA.columns:
+            if col == 'class':
+                ent_class = self.ENT_DATA.loc[name, col]
+            else:
+                props[col] = self.ENT_DATA.loc[name, col]
+        return ent_class, props
+
+    def _spawn_actor(self, name, props, x, y):
+        combat = Combat(props['hp'], props['base_armor'], None,
+                        props['base_attack'])
+        ai = HostileEnemy()
+        fov_radius = None
+        inventory = Inventory()
+        entity = Actor(name, x, y, props['char'], props['color'],
+                       props['blocking'], combat, ai, fov_radius, inventory)
+        entity.ai.entity = entity
+        entity.inventory.entity = entity
+        return entity
+
+    def _spawn_equippable(self, name, props, x, y):
+        entity = Equippable(name, x, y, props['char'], props['color'],
+                            props['blocking'], props['equip_time'],
+                            props['armor_bonus'], props['def_bonus'],
+                            props['att_bonus'], props['dam_bonus'])
+        return entity
+
+    def _spawn_entity(self, entities, room, name):
+        x, y = self._roll_entity_xy(room, entities)
+        ent_class, props = self._get_entity_properties(name)
+        if ent_class == 'actor':
+            entity = self._spawn_actor(name, props, x, y)
+        elif ent_class == 'equippable':
+            entity = self._spawn_equippable(name, props, x, y)
+        entities.add(entity)
 
     def populate(self, entities):
-        ent_data = pd.read_csv('./data/entities.csv', index_col=0, header=0)
+        #TODO: modify size parameter
         for room in self.rooms:
             if isinstance(room, Hallway): continue
-            prob_dist = ent_data.loc[:, 'prob']
-            names = np.random.choice(ent_data.index, size=1, p=prob_dist)
-            for name in names:
-                if name == 'none': continue
-                min_num = ent_data.loc[name, 'min_num']
-                max_num = ent_data.loc[name, 'max_num']
-                num = np.random.randint(min_num, max_num + 1)
-                for _ in range(num):
-                    self._place_ent(entities, ent_data, name, room)
+            name_set = self._roll_entities()
+            if name_set is not None:
+                for name in name_set:
+                    self._spawn_entity(entities, room, name)
 
     def gen_map(self, gridw, gridh, block_size):
         grid = Grid(gridw, gridh, block_size)
@@ -155,8 +181,8 @@ class Map:
         self._gen_tiles(gridx, gridy, grid.tile_idx)
         self._find_rooms()
 
-    def create_player(self):
-        startx, starty = self.get_start()
+    def spawn_player(self):
+        startx, starty = self._get_start_xy()
         hp = 100
         armor = 0
         att = 10
@@ -166,9 +192,11 @@ class Map:
         shields = Shields(shields_hp, shields_charge_rate, shields_charge_delay)
         combat = Combat(hp, armor, shields, att)
         ai = BaseAI()
+        inventory = Inventory()
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', blocking=True, combat=combat, ai=ai,
-                       fov_radius=7)
+                       fov_radius=7, inventory=inventory)
         player.combat.entity = player
         player.ai.entity = player
+        player.inventory.entity = player
         return player

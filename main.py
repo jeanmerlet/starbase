@@ -1,7 +1,8 @@
 from bearlibterminal import terminal as blt
+# ~/miniconda3/envs/dungeon/lib/python3.11/site-packages/bearlibterminal/terminal.py
 from event_handlers import *
 from game_map import Map
-from entities import Entity, Actor
+from entities import Entity, Actor, Item
 from fov import FieldOfView as Fov
 import config
 from display import GUI
@@ -61,16 +62,24 @@ class Engine:
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
-            if self.game_map.visible[ent.x, ent.y]:
+            #if self.game_map.visible[ent.x, ent.y]:
+            if True:
                 ent.render(blt)
         self.gui.render()
         blt.refresh()
 
-    def get_blocking_entity(self, x, y):
+    def get_blocking_entity_at_xy(self, x, y):
         for ent in self.entities:
             if ent.blocking and ent.x == x and ent.y == y:
                 return ent
         return None
+
+    def get_items_at_xy(self, x, y):
+        items = []
+        for ent in self.entities:
+            if isinstance(ent, Item) and ent.x == x and ent.y == y:
+                items.append(ent)
+        return items
 
     def load_terminal_settings(self):
         self.settings = config.TerminalSettings()
@@ -83,7 +92,7 @@ def main():
     event_handler = MainGameEventHandler()
     game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
     game_map.gen_map(config.GRIDW, config.GRIDH, config.BLOCK_SIZE)
-    player = game_map.create_player()
+    player = game_map.spawn_player()
     entities = {player}
     game_map.populate(entities)
     fov = Fov(game_map.opaque)
