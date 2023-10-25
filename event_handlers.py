@@ -19,8 +19,8 @@ WAIT = {
 }
 
 INVENTORY = {
-    blt.TK_KP_2: 'scroll_up',
-    blt.TK_KP_8: 'scroll_down',
+    #blt.TK_KP_2: 'scroll_up',
+    #blt.TK_KP_8: 'scroll_down',
     blt.TK_ESCAPE: 'exit'
 }
 
@@ -53,9 +53,9 @@ class MainGameEventHandler(EventHandler):
             if command == 'get_item':
                 action = PickupAction()
             elif command == 'open_inventory':
-                action = OpenInventoryAction()
+                action = OpenInventoryAction('inspect')
             elif command == 'drop_item':
-                action = None
+                action = OpenInventoryAction('drop')
         elif event in MENU:
             command = MENU[event]
             if command == 'quit':
@@ -66,16 +66,40 @@ class MainGameEventHandler(EventHandler):
 
 
 class InventoryEventHandler(EventHandler):
+    def __init__(self, inventory):
+        self.inventory = inventory
+
     def dispatch(self, event):
         if event in INVENTORY:
             command = INVENTORY[event]
             if command == 'exit':
                 action = CloseInventoryAction()
-            else:
-                action = None
         elif event in list(range(4, 30)):
-            letter = chr(event + 93)
-            action = DropAction(letter)
+            idx = event - 4
+            action = self._select_item(idx)
+        else:
+            action = None
+        return action
+
+    def item_selected(self, event):
+        raise NotImplementedError()
+
+
+class InventoryInspectHandler(InventoryEventHandler):
+    def _select_item(self, idx):
+        if len(self.inventory.items) - 1 >= idx:
+            item = self.inventory.items[idx]
+            action = InspectItem(item)
+        else:
+            action = None
+        return action
+        
+
+class InventoryDropHandler(InventoryEventHandler):
+    def _select_item(self, idx):
+        if len(self.inventory.items) - 1 >= idx:
+            item = self.inventory.items[idx]
+            action = DropItem(item)
         else:
             action = None
         return action

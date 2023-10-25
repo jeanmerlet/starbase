@@ -18,6 +18,7 @@ class Engine:
         self._update_fov()
         self.gui = gui
         self.gui.update(self.player, [])
+        self.no_turn_taken = False
 
     def _get_dist_sorted_entities(self, entities):
         key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
@@ -42,18 +43,21 @@ class Engine:
         if action is None: return
         msgs = []
         msgs += action.perform(self, self.player)
-        msgs += self._handle_enemy_turns()
-        self._update_all(msgs)
+        if not self.no_turn_taken:
+            msgs += self._handle_enemy_turns()
+        self.gui.update(self.player, msgs)
+        if not self.no_turn_taken:
+            self._update_all()
+        self.no_turn_taken = False
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def _update_all(self, msgs):
+    def _update_all(self):
         self._update_fov()
         self.player.combat.shields.update()
-        self.gui.update(self.player, msgs)
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
@@ -84,8 +88,16 @@ class Engine:
     def load_terminal_settings(self):
         self.settings = config.TerminalSettings()
 
-    def game_over(self):
-        self.event_handler = GameOverEventHandler()
+    def change_event_handler(self, state):
+        if state == 0:
+            self.event_handler = MainGameEventHandler()
+        elif state == 1:
+            self.event_handler = GameOverEventHandler()
+        elif state == 2:
+            self.event_handler = InventoryInspectHandler(self.player.inventory)
+        elif state == 3:
+            self.event_handler = InventoryDropHandler(self.player.inventory)
+            
 
 
 def main():

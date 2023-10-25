@@ -57,12 +57,14 @@ class LogDisplay(Display):
             return [msg]
 
     def update(self, msgs):
+        #TODO: update to deal with last old message being repeated after
+        # a new message is appended that isn't repeated
         new_msgs = []
         for msg in msgs:
             if self.old_msgs and self.old_msgs[-1][:len(msg)] == msg:
                 self.repeat += 1
                 old_msg = self.old_msgs[-1][:len(msg)]
-                old_msg += (f' x{self.repeat}').ljust(5)
+                old_msg += (f' x{self.repeat + 1}').ljust(5)
                 self.old_msgs[-1] = old_msg
             else:
                 new_msgs.append(msg)
@@ -94,19 +96,32 @@ class LogDisplay(Display):
 
 
 class MenuDisplay(Display):
-    def __init__(self, x, y, w, h, menu_items):
+    def __init__(self, x, y, w, h, menu_items, menu_title):
         super().__init__(x, y)
         self.orig_y = y
         self.w, self.h = w, h
         self.menu_items = menu_items
+        self.menu_title = menu_title
+        self.border_tile = '[color=menu_border]\u2592[/color]'
+
+    def _render_border(self):
+        blt.print(self.x, self.y, self.border_tile * self.w)
+        for y in range(self.h - 2):
+            blt.print(self.x, self.y + y + 1, self.border_tile)
+            blt.print(self.x + self.w - 1, self.y + y + 1, self.border_tile)
+        blt.print(self.x, self.y + self.h - 1, self.border_tile * self.w)
 
     def render(self):
+        self.y = self.orig_y
         blt.clear_area(self.x, self.y, self.w, self.h)
+        self._render_border()
+        self.y += 1
+        blt.print(self.x + 2, self.y, self.menu_title)
         self.y += 1
         menu_idx = list(map(chr, range(97, 123)))
         for i, item in enumerate(self.menu_items):
-            text = f' {menu_idx[i]}. [color={item.color}]{item.name}[/color]'
-            blt.print(self.x, self.y, text)
+            text = f'{menu_idx[i]}. [color={item.color}]{item.name}[/color]'
+            blt.print(self.x + 2, self.y, text)
             self.y += 1
 
 

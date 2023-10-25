@@ -17,7 +17,7 @@ class DeathAction(Action):
     def perform(self, engine, entity):
         if entity is engine.player:
             self.msgs.append('You have DIED.')
-            engine.game_over()
+            engine.change_event_handler(1)
         else:
             self.msgs.append(f'The {entity.name} dies.')
         entity.name = f'{entity.name} corpse'
@@ -31,17 +31,11 @@ class DeathAction(Action):
 
 
 class QuitAction(Action):
-    def __init__(self):
-        super().__init__()
-
     def perform(self, engine, entity):
         raise SystemExit()
 
 
 class WaitAction(Action):
-    def __init__(self):
-        super().__init__()
-
     def perform(self, engine, entity):
         return []
 
@@ -125,6 +119,33 @@ class CheckAction(DirectedAction):
             return MoveAction(self.dx, self.dy).perform(engine, entity)
 
 
+class ItemAction(Action):
+    def __init__(self, item):
+        super().__init__()
+        self.item = item
+
+    def perform(self, engine, entity):
+        raise NotImplementedError()
+
+
+class InspectItem(ItemAction):
+    def perform(self, engine, entity):
+        self.msgs.append(f'This is a nice looking {self.item.name}.')
+        return self.msgs
+
+
+class DropItem(ItemAction):
+    def perform(self, engine, entity):
+        entity.inventory.items.remove(self.item)
+        self.item.x = entity.x
+        self.item.y = entity.y
+        engine.entities.add(self.item)
+        self.msgs.append("You drop {item.name}.")
+        engine.gui.menu = None
+        engine.change_event_handler(0)
+        return self.msgs
+
+
 class PickupAction(Action):
     def perform(self, engine, entity):
         items = engine.get_items_at_xy(entity.x, entity.y)
@@ -139,35 +160,44 @@ class PickupAction(Action):
                 self.msgs.append(f"There's no room for {item.name}.")
         else:
             self.msgs.append("There's nothing here.")
+            engine.no_turn_taken = True
         return self.msgs
 
 
-class DropAction(Action):
-    def __init__(self, letter):
+class MenuAction(Action):
+    def __init__(self):
         super().__init__()
-        self.letter = letter
 
     def perform(self, engine, entity):
-        pass
+        raise NotImplementedError()
 
 
-class OpenInventoryAction(Action):
+class OpenInventoryAction(MenuAction):
+    def __init__(self, state):
+        super().__init__()
+        self.state = state
+
     def perform(self, engine, entity):
         w = config.INVENTORY_WIDTH
-        h = len(entity.inventory.items) + 2
+        h = config.INVENTORY_HEIGHT
         x = (config.SCREEN_WIDTH - config.INVENTORY_WIDTH) // 2
         y = (config.SCREEN_HEIGHT - h) // 2
         menu_items = entity.inventory.items
-        engine.gui.menu = MenuDisplay(x, y, w, h, menu_items)
+        inv_size = entity.inventory.size
+        inv_avail = inv_size - len(entity.inventory.items)
+        menu_title = f'Inventory: {inv_avail}/{inv_size} spots available'
+        engine.gui.menu = MenuDisplay(x, y, w, h, menu_items, menu_title)
+        if self.state == 'inspect':
+            engine.change_event_handler(2)
+        elif self.state == 'drop':
+            engine.change_event_handler(3)
+        engine.no_turn_taken = True
         return self.msgs
 
 
-class CloseInventoryAction(Action):
+class CloseInventoryAction(MenuAction):
     def perform(self, engine, entity):
         engine.gui.menu = None
+        engine.change_event_handler(0)
+        engine.no_turn_taken = True
         return self.msgs
-
-
-class ItemAction(Action):
-    def perform(self, engine, entity):
-        pass
