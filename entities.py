@@ -13,12 +13,13 @@ class Entity:
 
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, blocking, combat, ai,
-                 fov_radius, inventory):
+                 fov_radius, inventory, equipment):
         super().__init__(name, x, y, char, color, blocking, render_order=0)
         self.combat = combat
         self.ai = ai
         self.fov_radius = fov_radius
         self.inventory = inventory
+        self.equipment = equipment
 
     def move(self, dx, dy):
         self.x += dx
@@ -49,11 +50,16 @@ class HealingConsumable(Consumable):
 
 class Equippable(Item):
     def __init__(self, name, x, y, char, color, blocking, equip_time,
-                 armor_bonus, def_bonus, att_bonus, dam_bonus):
+                 armor_bonus, def_bonus, att_bonus, dam_bonus, shp_bonus,
+                 scr_bonus, scd_bonus, slot_type):
         super().__init__(name, x, y, char, color, blocking)
         self.equip_time = equip_time
         self.armor_bonus = armor_bonus
         self.def_bonus = def_bonus
         self.att_bonus = att_bonus
         self.dam_bonus = dam_bonus
+        self.shp_bonus = shp_bonus
+        self.scr_bonus = scr_bonus
+        self.scd_bonus = scd_bonus
+        self.slot_type = slot_type
         self.equipped = False

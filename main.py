@@ -18,7 +18,7 @@ class Engine:
         self._update_fov()
         self.gui = gui
         self.gui.update(self.player, [])
-        self.no_turn_taken = False
+        self.skip_enemy_turn = False
 
     def _get_dist_sorted_entities(self, entities):
         key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
@@ -40,24 +40,24 @@ class Engine:
     def handle_event(self):
         event = blt.read()
         action = self.event_handler.dispatch(event)
-        if action is None: return
-        msgs = []
-        msgs += action.perform(self, self.player)
-        if not self.no_turn_taken:
-            msgs += self._handle_enemy_turns()
-        self.gui.update(self.player, msgs)
-        if not self.no_turn_taken:
-            self._update_all()
-        self.no_turn_taken = False
+        if action is None:
+            return
+        elif isinstance(action, InstantAction):
+            action.perform(self, self.player)
+            return
+        msgs = action.perform(self, self.player)
+        msgs += self._handle_enemy_turns()
+        self._update_all(msgs)
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def _update_all(self):
+    def _update_all(self, msgs):
+        self.gui.update(self.player, msgs)
         self._update_fov()
-        self.player.combat.shields.update()
+        self.player.combat.shields.charge()
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
@@ -88,15 +88,23 @@ class Engine:
     def load_terminal_settings(self):
         self.settings = config.TerminalSettings()
 
-    def change_event_handler(self, state):
-        if state == 0:
+    def set_event_handler(self, event_handler, **kwargs):
+        if 'inventory' in kwargs:
+            inventory = kwargs['inventory']
+        if 'valid_items' in kwargs:
+            valid_items = kwargs['valid_items']
+        if event_handler == 'main_game':
             self.event_handler = MainGameEventHandler()
-        elif state == 1:
+        elif event_handler == 'game_over':
             self.event_handler = GameOverEventHandler()
-        elif state == 2:
-            self.event_handler = InventoryInspectHandler(self.player.inventory)
-        elif state == 3:
-            self.event_handler = InventoryDropHandler(self.player.inventory)
+        elif event_handler == 'inspect_inventory':
+            self.event_handler = InspectInventoryHandler(inventory, valid_items)
+        elif event_handler == 'drop_inventory':
+            self.event_handler = DropInventoryHandler(inventory, valid_items)
+        elif event_handler == 'equip_inventory':
+            self.event_handler = EquipInventoryHandler(inventory, valid_items)
+        elif event_handler == 'unequip_inventory':
+            self.event_handler = UnequipInventoryHandler(inventory, valid_items)
             
 
 
@@ -108,8 +116,7 @@ def main():
     entities = {player}
     game_map.populate(entities)
     fov = Fov(game_map.opaque)
-    gui = GUI(player.combat.hp, player.combat.max_hp,
-              player.combat.shields.hp, player.combat.shields.max_hp)
+    gui = GUI(player.combat.hp, player.combat.max_hp, 0, 0)
     engine = Engine(event_handler, game_map, player, entities, fov, gui)
 
     blt.open()

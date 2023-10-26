@@ -19,20 +19,19 @@ WAIT = {
 }
 
 INVENTORY = {
-    #blt.TK_KP_2: 'scroll_up',
-    #blt.TK_KP_8: 'scroll_down',
     blt.TK_ESCAPE: 'exit'
 }
 
-MENU = {
+GAME_MENU = {
     blt.TK_Q: 'quit'
 }
 
 MAIN = {
     blt.TK_I: 'open_inventory',
     blt.TK_G: 'get_item',
-    blt.TK_COMMA: 'get_item',
-    blt.TK_D: 'drop_item'
+    blt.TK_D: 'drop_item',
+    blt.TK_E: 'equip_item',
+    blt.TK_U: 'unequip_item'
 }
 
 
@@ -53,11 +52,15 @@ class MainGameEventHandler(EventHandler):
             if command == 'get_item':
                 action = PickupAction()
             elif command == 'open_inventory':
-                action = OpenInventoryAction('inspect')
+                action = InspectInventoryMenu()
             elif command == 'drop_item':
-                action = OpenInventoryAction('drop')
-        elif event in MENU:
-            command = MENU[event]
+                action = DropInventoryMenu()
+            elif command == 'equip_item':
+                action = EquipInventoryMenu()
+            elif command == 'unequip_item':
+                action = UnequipInventoryMenu()
+        elif event in GAME_MENU:
+            command = GAME_MENU[event]
             if command == 'quit':
                 action = QuitAction()
         else:
@@ -66,42 +69,48 @@ class MainGameEventHandler(EventHandler):
 
 
 class InventoryEventHandler(EventHandler):
-    def __init__(self, inventory):
+    def __init__(self, inventory, valid_items):
         self.inventory = inventory
+        self.valid_items = valid_items
 
     def dispatch(self, event):
         if event in INVENTORY:
             command = INVENTORY[event]
             if command == 'exit':
-                action = CloseInventoryAction()
+                action = CloseMenuAction()
         elif event in list(range(4, 30)):
-            idx = event - 4
-            action = self._select_item(idx)
+            slot = chr(event + 93)
+            item = self.inventory.items[slot]
+            if item and item in self.valid_items:
+                action = self._get_action(item)
+            else:
+                action = None
         else:
             action = None
         return action
 
-    def item_selected(self, event):
-        raise NotImplementedError()
 
-
-class InventoryInspectHandler(InventoryEventHandler):
-    def _select_item(self, idx):
-        if len(self.inventory.items) - 1 >= idx:
-            item = self.inventory.items[idx]
-            action = InspectItem(item)
-        else:
-            action = None
+class InspectInventoryHandler(InventoryEventHandler):
+    def _get_action(self, item):
+        action = InspectItem(item)
         return action
         
 
-class InventoryDropHandler(InventoryEventHandler):
-    def _select_item(self, idx):
-        if len(self.inventory.items) - 1 >= idx:
-            item = self.inventory.items[idx]
-            action = DropItem(item)
-        else:
-            action = None
+class DropInventoryHandler(InventoryEventHandler):
+    def _get_action(self, item):
+        action = DropItem(item)
+        return action
+
+
+class EquipInventoryHandler(InventoryEventHandler):
+    def _get_action(self, item):
+        action = EquipItem(item)
+        return action
+
+
+class UnequipInventoryHandler(InventoryEventHandler):
+    def _get_action(self, item):
+        action = UnequipItem(item)
         return action
 
 

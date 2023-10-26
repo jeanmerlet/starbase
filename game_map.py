@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor, Equippable
-from components import Combat, Shields, Inventory
+from components import Combat, Shields, Inventory, Equipment
 from ai import BaseAI, HostileEnemy
 from tiles import *
 
@@ -113,9 +113,11 @@ class Map:
         #TODO: get sets of entities larger than size 1
         # (e.g. multiple skitterlings or robot and kevlar)
         # make another csv table for these sets
+        # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.8, 0.1, 0.09, 0.01]
-        idx = np.arange(4)
+        #dist = [0.8, 0.1, 0.09, 0.01]
+        dist = [0.4, 0, 0.2, 0, 0.4]
+        idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
 
@@ -142,8 +144,10 @@ class Map:
         ai = HostileEnemy()
         fov_radius = None
         inventory = Inventory()
+        equipment = Equipment(None, None, None)
         entity = Actor(name, x, y, props['char'], props['color'],
-                       props['blocking'], combat, ai, fov_radius, inventory)
+                       props['blocking'], combat, ai, fov_radius,
+                       inventory, equipment)
         entity.ai.entity = entity
         entity.inventory.entity = entity
         return entity
@@ -152,7 +156,9 @@ class Map:
         entity = Equippable(name, x, y, props['char'], props['color'],
                             props['blocking'], props['equip_time'],
                             props['armor_bonus'], props['def_bonus'],
-                            props['att_bonus'], props['dam_bonus'])
+                            props['att_bonus'], props['dam_bonus'],
+                            props['shp_bonus'], props['scr_bonus'],
+                            props['scd_bonus'], props['slot_type'])
         return entity
 
     def _spawn_entity(self, entities, room, name):
@@ -183,20 +189,20 @@ class Map:
 
     def spawn_player(self):
         startx, starty = self._get_start_xy()
-        hp = 100
+        hp = 30
         armor = 0
         att = 10
-        shields_hp = 20
-        shields_charge_rate = 5
-        shields_charge_delay = 3
-        shields = Shields(shields_hp, shields_charge_rate, shields_charge_delay)
+        shields = Shields(0, 0, 0)
         combat = Combat(hp, armor, shields, att)
         ai = BaseAI()
         inventory = Inventory()
+        equipment = Equipment(None, None, None)
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', blocking=True, combat=combat, ai=ai,
-                       fov_radius=7, inventory=inventory)
+                       fov_radius=7, inventory=inventory, equipment=equipment)
         player.combat.entity = player
         player.ai.entity = player
-        player.inventory.entity = player
+        player.equipment.entity = player
+        player.combat.shields.entity = player
+        player.combat.shields.update()
         return player

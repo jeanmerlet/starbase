@@ -18,21 +18,26 @@ class BarDisplay(Display):
         self.max_value = max_value
         self.full_bar_tile = f'[color={lcolor}]\u2588[/color]'
         self.empty_bar_tile = f'[color={dcolor}]\u2588[/color]'
-        self.bg = ' ' * self.length
+        #self.bg = ' ' * self.length
 
-    def update(self, value):
+    def update(self, value, max_value):
+        self.max_value = max_value
         self.value = value
-        self.length = int((self.value / self.max_value) * self.max_length)
+        if self.max_value == 0:
+            self.length = 0
+        else:
+            self.length = int((self.value / self.max_value) * self.max_length)
         #self.text = f'{self.name}: {self.value} / {self.max_value}'
 
     def render(self):
-        blt.print(self.x, self.y, self.bg)
-        blt.print(self.x, self.y, self.name)
-        for i in range(self.max_length):
-            if i < self.length:
-                blt.print(self.x+i, self.y+1, self.full_bar_tile)
-            else:
-                blt.print(self.x+i, self.y+1, self.empty_bar_tile)
+        blt.clear_area(self.x, self.y, self.max_length, 2)
+        if self.max_value > 0:
+            blt.print(self.x, self.y, self.name)
+            for i in range(self.max_length):
+                if i < self.length:
+                    blt.print(self.x+i, self.y+1, self.full_bar_tile)
+                else:
+                    blt.print(self.x+i, self.y+1, self.empty_bar_tile)
 
 
 class LogDisplay(Display):
@@ -119,14 +124,13 @@ class MenuDisplay(Display):
         blt.print(self.x + 2, self.y, self.menu_title)
         self.y += 1
         menu_idx = list(map(chr, range(97, 123)))
-        for i, item in enumerate(self.menu_items):
-            text = f'{menu_idx[i]}. [color={item.color}]{item.name}[/color]'
-            blt.print(self.x + 2, self.y, text)
+        for item in self.menu_items:
+            blt.print(self.x + 2, self.y, item)
             self.y += 1
 
 
 class GUI:
-    def __init__(self, hp, max_hp, shields, max_shields):
+    def __init__(self, hp, max_hp, shields_hp, max_shields_hp):
         hpx = config.SCREEN_WIDTH - config.SIDE_PANEL_WIDTH
         hpy = 1
         logx = 2
@@ -135,7 +139,7 @@ class GUI:
                                  'darker red', hp, max_hp)
         self.shields_bar = BarDisplay(hpx, hpy + 3, 20, 'Shields',
                                       'light blue', 'darker blue',
-                                      shields, max_shields)
+                                      shields_hp, max_shields_hp)
         self.log = LogDisplay(logx, logy, hpx - 1, 5)
         self.menu = None
 
@@ -146,6 +150,7 @@ class GUI:
         if self.menu: self.menu.render()
 
     def update(self, player, msgs):
-        self.hp_bar.update(player.combat.hp)
-        self.shields_bar.update(player.combat.shields.hp)
+        self.hp_bar.update(player.combat.hp, player.combat.max_hp)
+        self.shields_bar.update(player.combat.shields.hp,
+                                player.combat.shields.max_hp)
         self.log.update(msgs)
