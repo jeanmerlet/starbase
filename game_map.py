@@ -115,8 +115,8 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        #dist = [0.8, 0.1, 0.09, 0.01]
-        dist = [0.4, 0, 0.2, 0, 0.4]
+        dist = [0.5, 0.1, 0.2, 0.1, 0.1]
+        #dist = [0.4, 0, 0.2, 0, 0.4]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
