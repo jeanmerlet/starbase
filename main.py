@@ -6,6 +6,7 @@ from entities import Entity, Actor, Item
 from fov import FieldOfView as Fov
 import config
 from display import GUI
+import time
 
 
 class Engine:
@@ -39,9 +40,9 @@ class Engine:
 
     def handle_event(self):
         event = blt.read()
+        #self.event_handler.handle_event(event)
         action = self.event_handler.dispatch(event)
-        if action is None:
-            return
+        if action is None: return
         elif action.instant_action:
             action.perform(self, self.player)
             return
@@ -54,7 +55,7 @@ class Engine:
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def update_all(self):
+    def update(self):
         self.gui.update(self.player, self.msgs)
         self._update_fov()
         self.player.combat.shields.charge()
@@ -63,7 +64,6 @@ class Engine:
         return sorted(self.entities, key=lambda x: -x.render_order)
 
     def render(self):
-        #TODO: add wizmode for starting game with all entities renderered
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
@@ -108,6 +108,10 @@ class Engine:
             self.event_handler = UnequipInventoryHandler(inventory, valid_items)
 
 
+#TODO: move all engine to engine.py
+#TODO: add wizmode for starting game with all entities renderered
+# add wizmode for starting game with all entities renderered and
+# printing fps, etc.
 def main():
     event_handler = MainGameEventHandler()
     game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
@@ -121,10 +125,15 @@ def main():
 
     blt.open()
     engine.load_terminal_settings()
+    i = 0
+    start_time = time.time()
     while True:
         engine.render()
-        engine.handle_event()
-        engine.update_all()
+        if blt.has_input():
+            engine.handle_event()
+            engine.update()
+        print(f'fps: {i // (time.time() - start_time)}')
+        i += 1
 
 
 if __name__ == "__main__":

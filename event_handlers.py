@@ -61,7 +61,7 @@ class MainGameEventHandler(EventHandler):
                 action = UnequipInventoryMenu()
         elif event in OPTIONS:
             command = OPTIONS[event]
-            if command == 'quit':
+            if command == 'exit_game':
                 action = QuitAction()
         else:
             action = None
