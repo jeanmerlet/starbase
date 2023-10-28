@@ -6,12 +6,8 @@ from entities import Equippable
 class Action:
     def __init__(self):
         self.msgs = []
+        self.instant_action = False
 
-    def perform(self, engine, entity):
-        raise NotImplementedError()
-
-
-class InstantAction(Action):
     def perform(self, engine, entity):
         raise NotImplementedError()
 
@@ -23,6 +19,31 @@ class ItemAction(Action):
 
     def perform(self, engine, entity):
         raise NotImplementedError()
+
+
+class DirectedAction(Action):
+    def __init__(self, dx, dy):
+        super().__init__()
+        self.dx = dx
+        self.dy = dy
+
+    def perform(self, engine, entity):
+        raise NotImplementedError()
+
+    def _get_target_xy(self, entity):
+        dest_x = entity.x + self.dx
+        dest_y = entity.y + self.dy
+        return dest_x, dest_y
+
+
+class QuitAction(Action):
+    def perform(self, engine, entity):
+        raise SystemExit()
+
+
+class WaitAction(Action):
+    def perform(self, engine, entity):
+        return self.msgs
 
 
 class DeathAction(Action):
@@ -43,31 +64,6 @@ class DeathAction(Action):
         entity.ai = None
         entity.render_order = 2
         return self.msgs
-
-
-class QuitAction(Action):
-    def perform(self, engine, entity):
-        raise SystemExit()
-
-
-class WaitAction(Action):
-    def perform(self, engine, entity):
-        return self.msgs
-
-
-class DirectedAction(Action):
-    def __init__(self, dx, dy):
-        super().__init__()
-        self.dx = dx
-        self.dy = dy
-
-    def perform(self, engine, entity):
-        raise NotImplementedError()
-
-    def _get_target_xy(self, entity):
-        dest_x = entity.x + self.dx
-        dest_y = entity.y + self.dy
-        return dest_x, dest_y
 
 
 class AttackAction(DirectedAction):
@@ -148,13 +144,23 @@ class PickupAction(Action):
                 self.msgs.append(f"There's no room for {item.name}.")
                 engine.no_turn_taken = True
         else:
-            self.msgs.append("There's nothing here.")
+            self.msgs.append("There's nothing here to pick up.")
             engine.no_turn_taken = True
         return self.msgs
 
 
-class InspectItem(ItemAction, InstantAction):
+class InspectItem(ItemAction):
+    def __init__(self, item):
+        super().__init__(item)
+        self.instant_action = True
+
     def perform(self, engine, entity):
+        w = config.INVENTORY_WIDTH
+        h = config.INVENTORY_HEIGHT
+        x = (config.SCREEN_WIDTH - config.INVENTORY_WIDTH) // 2 + 2
+        y = (config.SCREEN_HEIGHT - h) // 2 + 2
+        engine.set_event_handler('')
+        engine.gui.menu = MenuDisplay(x, y, w, h, names, self.menu_title)
         print(f'This is a nice looking {self.item.name}.')
         return None
 
@@ -195,13 +201,19 @@ class UnequipItem(ItemAction):
         return self.msgs
 
 
-class CloseMenuAction(InstantAction):
+class CloseMenuAction(Action):
+    def __init__(self):
+        self.instant_action = True
+
     def perform(self, engine, entity):
         engine.gui.menu = None
         engine.set_event_handler('main_game')
 
 
-class InventoryMenu(InstantAction):
+class InventoryMenu(Action):
+    def __init__(self):
+        self.instant_action = True
+
     def perform(self, engine, entity):
         w = config.INVENTORY_WIDTH
         h = config.INVENTORY_HEIGHT

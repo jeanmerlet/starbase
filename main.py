@@ -42,7 +42,7 @@ class Engine:
         action = self.event_handler.dispatch(event)
         if action is None:
             return
-        elif isinstance(action, InstantAction):
+        elif action.instant_action:
             action.perform(self, self.player)
             return
         msgs = action.perform(self, self.player)
@@ -63,6 +63,7 @@ class Engine:
         return sorted(self.entities, key=lambda x: -x.render_order)
 
     def render(self):
+        #TODO: add wizmode for starting game with all entities renderered
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
@@ -105,7 +106,6 @@ class Engine:
             self.event_handler = EquipInventoryHandler(inventory, valid_items)
         elif event_handler == 'unequip_inventory':
             self.event_handler = UnequipInventoryHandler(inventory, valid_items)
-            
 
 
 def main():

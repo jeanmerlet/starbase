@@ -18,7 +18,6 @@ class BarDisplay(Display):
         self.max_value = max_value
         self.full_bar_tile = f'[color={lcolor}]\u2588[/color]'
         self.empty_bar_tile = f'[color={dcolor}]\u2588[/color]'
-        #self.bg = ' ' * self.length
 
     def update(self, value, max_value):
         self.max_value = max_value

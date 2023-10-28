@@ -1,6 +1,6 @@
 name,class,char,color,blocking,hp,base_armor,base_shp,base_scr,base_scd,base_defense,base_attack,damage,dam_type,equip_time,armor_bonus,def_bonus,att_bonus,dam_bonus,shp_bonus,scr_bonus,scd_bonus,slot_type
 skitterling,actor,s,dark purple,True,8,0,0,0,0,2,4,1d2,kinetic,None,0,0,0,0,None,None,None,None
 rustbot,actor,R,darker red,True,25,2,0,0,0,0,8,1d8,kinetic,None,0,0,0,0,None,None,None,None
-kevlar,equippable,[[,dark green,False,None,None,None,None,None,None,None,None,None,1,2,-1,0,0,0,0,0,armor
-plated kevlar,equippable,[[,darker green,False,None,None,None,None,None,None,None,None,None,2,4,-2,-1,0,0,0,0,armor
+kevlar body armor,equippable,[[,dark green,False,None,None,None,None,None,None,None,None,None,1,2,-1,0,0,0,0,0,armor
+plated kevlar body armor,equippable,[[,darker green,False,None,None,None,None,None,None,None,None,None,2,4,-2,-1,0,0,0,0,armor
 shields,equippable,]],light blue,False,None,None,None,None,None,None,None,None,None,1,0,0,0,0,9,3,3,shields

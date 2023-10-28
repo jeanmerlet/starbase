@@ -18,19 +18,19 @@ WAIT = {
     blt.TK_PERIOD
 }
 
-INVENTORY = {
-    blt.TK_ESCAPE: 'exit'
+ESCAPE = {
+    blt.TK_ESCAPE
 }
 
-GAME_MENU = {
-    blt.TK_Q: 'quit'
+OPTIONS = {
+    blt.TK_Q: 'exit_game'
 }
 
 MAIN = {
-    blt.TK_I: 'open_inventory',
-    blt.TK_G: 'get_item',
     blt.TK_D: 'drop_item',
     blt.TK_E: 'equip_item',
+    blt.TK_G: 'get_item',
+    blt.TK_I: 'open_inventory',
     blt.TK_U: 'unequip_item'
 }
 
@@ -59,8 +59,8 @@ class MainGameEventHandler(EventHandler):
                 action = EquipInventoryMenu()
             elif command == 'unequip_item':
                 action = UnequipInventoryMenu()
-        elif event in GAME_MENU:
-            command = GAME_MENU[event]
+        elif event in OPTIONS:
+            command = OPTIONS[event]
             if command == 'quit':
                 action = QuitAction()
         else:
@@ -68,21 +68,14 @@ class MainGameEventHandler(EventHandler):
         return action
 
 
-class InventoryEventHandler(EventHandler):
-    def __init__(self, inventory, valid_items):
-        self.inventory = inventory
-        self.valid_items = valid_items
-
+class MenuEventHandler(EventHandler):
     def dispatch(self, event):
-        if event in INVENTORY:
-            command = INVENTORY[event]
-            if command == 'exit':
-                action = CloseMenuAction()
+        if event in ESCAPE:
+            action = CloseMenuAction()
         elif event in list(range(4, 30)):
-            slot = chr(event + 93)
-            item = self.inventory.items[slot]
-            if item and item in self.valid_items:
-                action = self._get_action(item)
+            selection = chr(event + 93)
+            if self._selection_is_valid(selection):
+                action = self._get_action()
             else:
                 action = None
         else:
@@ -90,34 +83,47 @@ class InventoryEventHandler(EventHandler):
         return action
 
 
-class InspectInventoryHandler(InventoryEventHandler):
-    def _get_action(self, item):
-        action = InspectItem(item)
+class InventoryMenuHandler(MenuEventHandler):
+    def __init__(self, inventory, valid_items):
+        self.inventory = inventory
+        self.valid_items = valid_items
+
+    def _selection_is_valid(self, slot):
+        item = self.inventory.items[slot]
+        if item and item in self.valid_items:
+            self.item = item
+            return True
+        return False
+
+
+class InspectInventoryHandler(InventoryMenuHandler):
+    def _get_action(self):
+        action = InspectItem(self.item)
         return action
         
 
-class DropInventoryHandler(InventoryEventHandler):
-    def _get_action(self, item):
-        action = DropItem(item)
+class DropInventoryHandler(InventoryMenuHandler):
+    def _get_action(self):
+        action = DropItem(self.item)
         return action
 
 
-class EquipInventoryHandler(InventoryEventHandler):
-    def _get_action(self, item):
-        action = EquipItem(item)
+class EquipInventoryHandler(InventoryMenuHandler):
+    def _get_action(self):
+        action = EquipItem(self.item)
         return action
 
 
-class UnequipInventoryHandler(InventoryEventHandler):
-    def _get_action(self, item):
-        action = UnequipItem(item)
+class UnequipInventoryHandler(InventoryMenuHandler):
+    def _get_action(self):
+        action = UnequipItem(self.item)
         return action
 
 
 class GameOverEventHandler(EventHandler):
     def dispatch(self, event):
-        if event in MENU:
-            command = MENU[event]
+        if event in OPTIONS:
+            command = OPTIONS[event]
             if command == 'quit':
                 action = QuitAction()
         else:
