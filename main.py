@@ -47,15 +47,15 @@ class Engine:
             return
         msgs = action.perform(self, self.player)
         msgs += self._handle_enemy_turns()
-        self._update_all(msgs)
+        self.msgs = msgs
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def _update_all(self, msgs):
-        self.gui.update(self.player, msgs)
+    def update_all(self):
+        self.gui.update(self.player, self.msgs)
         self._update_fov()
         self.player.combat.shields.charge()
 
@@ -124,6 +124,7 @@ def main():
     while True:
         engine.render()
         engine.handle_event()
+        engine.update_all()
 
 
 if __name__ == "__main__":
