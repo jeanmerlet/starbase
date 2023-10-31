@@ -1,20 +1,37 @@
 class Combat:
-    def __init__(self, hp, base_armor, shields, att):
-        self.hp = hp
-        self.max_hp = hp
+    def __init__(self, hit_points, base_armor, shields, att):
+        self.hit_points = hit_points
         self.base_armor = base_armor
         self.armor_bonus = 0
         self.shields = shields
         self.att = att
 
-    def set_hp(self, value):
-        self.hp = min(value, self.max_hp)
-
     def armor(self):
         return self.base_armor + self.armor_bonus
 
-    def is_alive(self):
-        return True if self.hp > 0 else False
+    def update_stats(self, equipment_items):
+        self.shields.update(equipment_items)
+
+    def update(self):
+        self.shields.charge()
+        self.hit_points.regen()
+
+
+class HitPoints:
+    def __init__(self, hp, regen_rate):
+        self.hp = hp
+        self.max_hp = hp
+        self.regen_rate = regen_rate
+
+    def heal(self, amount):
+        self.hp += amount
+        if self.hp > self.max_hp: self.hp = self.max_hp
+
+    def take_damage(self, amount):
+        self.hp -= amount
+
+    def regen(self):
+        self.heal(self.regen_rate)
 
 
 class Inventory:
@@ -44,40 +61,29 @@ class Inventory:
 
 
 class Equipment:
-    #TODO: change slots to a dict
     def __init__(self, weapon, armor, shields):
-        self.weapon_slot = weapon
-        self.armor_slot = armor
-        self.shields_slot = shields
+        self.slots = {
+            'weapon': weapon,
+            'armor': armor,
+            'shields': shields,
+        }
 
     def items(self):
-        return [self.weapon_slot, self.armor_slot, self.shields_slot]
+        return self.slots.values()
 
     def get_item_in_slot(self, slot):
-        if slot == 'weapon':
-            return self.weapon_slot
-        elif slot == 'amor':
-            return self.armor_slot
-        elif slot == 'shields':
-            return self.shields_slot
+        return self.slots[slot]
+
+    def update_entity_stats(self):
+        self.entity.combat.update_stats(self.items())
 
     def equip_to_slot(self, slot, item):
-        if slot == 'weapon':
-            self.weapon_slot = item
-        elif slot == 'amor':
-            self.armor_slot = item
-        elif slot == 'shields':
-            self.shields_slot = item
-            self.entity.combat.shields.update()
+        self.slots[slot] = item
+        self.update_entity_stats()
 
     def unequip_from_slot(self, slot):
-        if slot == 'weapon':
-            self.weapon_slot = None
-        elif slot == 'amor':
-            self.armor_slot = None
-        elif slot == 'shields':
-            self.shields_slot = None
-            self.entity.combat.shields.update()
+        self.slots[slot] = None
+        self.update_entity_stats()
 
 
 class Shields:
@@ -103,9 +109,9 @@ class Shields:
         else:
             self.time_until_charge -= 1
 
-    def update(self):
+    def update(self, equipment_items):
         shp_bonus, scr_bonus, scd_bonus = 0, 0, 0
-        for item in self.entity.equipment.items():
+        for item in equipment_items:
             if item is not None:
                 shp_bonus += item.shp_bonus
                 scr_bonus += item.scr_bonus

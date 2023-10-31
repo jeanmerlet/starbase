@@ -134,6 +134,7 @@ class GUI:
                 menu.render()
 
     def update(self, player):
-        self.hp_bar.update(player.combat.hp, player.combat.max_hp)
+        self.hp_bar.update(player.combat.hit_points.hp,
+                           player.combat.hit_points.max_hp)
         self.shields_bar.update(player.combat.shields.hp,
                                 player.combat.shields.max_hp)

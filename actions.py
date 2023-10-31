@@ -58,7 +58,7 @@ class AttackAction(Action):
         raise NotImplementedError()
 
     def _check_for_death(self, engine, target):
-        if not target.combat.is_alive():
+        if not target.is_alive():
             if target is engine.player:
                 engine.event_handler.push_cmds(GAME_OVER)
                 msg = ('You have DIED.')
@@ -87,6 +87,7 @@ class MeleeAction(DirectedAction, AttackAction):
             engine.gui.log.add_message(msg)
         else:
             dam = self._roll_damage(entity, target)
+            target.combat.hit_points.take_damage(dam)
             if entity is engine.player:
                 subj = 'You'
                 verb = 'hit'
@@ -98,7 +99,6 @@ class MeleeAction(DirectedAction, AttackAction):
             if dam > 0:
                 msg = (f'{subj} {verb} {obj} for {dam} damage.')
                 engine.gui.log.add_message(msg)
-                target.combat.set_hp(target.combat.hp - dam)
             else:
                 msg = (f'{subj} {verb} {obj} but does no damage.')
                 engine.gui.log.add_message(msg)

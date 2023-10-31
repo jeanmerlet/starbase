@@ -34,7 +34,7 @@ class Engine:
         entities = self._get_dist_sorted_entities(entities)
         for entity in entities:
             if entity.ai:
-                target = self.player if self.player.combat.is_alive() else None
+                target = self.player if self.player.is_alive() else None
                 action = entity.ai.get_action(self, target, visible, tiles)
                 action.perform(self, entity)
 
@@ -43,10 +43,9 @@ class Engine:
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    #TODO: move shield charge to combat update method that also regens hp
     def update(self):
         self._update_fov()
-        self.player.combat.shields.charge()
+        self.player.combat.update()
         self.gui.update(self.player)
 
     def _get_render_sorted_entities(self):
@@ -56,8 +55,8 @@ class Engine:
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
-            #if self.game_map.visible[ent.x, ent.y]:
-            if True:
+            if self.game_map.visible[ent.x, ent.y]:
+            #if True:
                 ent.render(blt)
         self.gui.render()
         blt.refresh()
@@ -101,7 +100,8 @@ def main():
     entities = {player}
     game_map.populate(entities)
     fov = FieldOfView(game_map.opaque)
-    gui = GUI(player.combat.hp, player.combat.max_hp, 0, 0)
+    gui = GUI(player.combat.hit_points.hp, player.combat.hit_points.max_hp,
+              player.combat.shields.hp, player.combat.shields.max_hp)
     engine = Engine(game_map, player, entities, fov, gui)
 
     blt.open()

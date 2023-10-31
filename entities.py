@@ -25,6 +25,9 @@ class Actor(Entity):
         self.x += dx
         self.y += dy
 
+    def is_alive(self):
+        return True if self.combat.hit_points.hp > 0 else False
+
     def die(self):
         self.name = f'{self.name} corpse'
         self.char = '%'

@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor, Equippable
-from components import Combat, Shields, Inventory, Equipment
+from components import Combat, HitPoints, Shields, Inventory, Equipment
 from ai import BaseAI, HostileEnemy
 from tiles import *
 
@@ -139,7 +139,8 @@ class Map:
         return ent_class, props
 
     def _spawn_actor(self, name, props, x, y):
-        combat = Combat(props['hp'], props['base_armor'], None,
+        hp = HitPoints(props['hp'], props['regen_rate'])
+        combat = Combat(hp, props['base_armor'], None,
                         props['base_attack'])
         ai = HostileEnemy()
         fov_radius = None
@@ -189,20 +190,18 @@ class Map:
 
     def spawn_player(self):
         startx, starty = self._get_start_xy()
-        hp = 30
+        hit_points = HitPoints(30, 0.1)
+        shields = Shields(0, 0, 0)
         armor = 0
         att = 10
-        shields = Shields(0, 0, 0)
-        combat = Combat(hp, armor, shields, att)
+        combat = Combat(hit_points, armor, shields, att)
         ai = BaseAI()
         inventory = Inventory()
         equipment = Equipment(None, None, None)
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', blocking=True, combat=combat, ai=ai,
                        fov_radius=7, inventory=inventory, equipment=equipment)
-        player.combat.entity = player
         player.ai.entity = player
         player.equipment.entity = player
-        player.combat.shields.entity = player
-        player.combat.shields.update()
+        player.equipment.update_entity_stats()
         return player
