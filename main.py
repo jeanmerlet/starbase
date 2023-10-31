@@ -47,6 +47,7 @@ class Engine:
     def update(self):
         self._update_fov()
         self.player.combat.shields.charge()
+        self.gui.update(self.player)
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
