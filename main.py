@@ -1,62 +1,50 @@
 from bearlibterminal import terminal as blt
 # ~/miniconda3/envs/dungeon/lib/python3.11/site-packages/bearlibterminal/terminal.py
-from event_handlers import *
+from event_handlers import EventHandler
 from game_map import Map
 from entities import Entity, Actor, Item
-from fov import FieldOfView as Fov
+from fov import FieldOfView
 import config
 from display import GUI
 import time
 
 
 class Engine:
-    def __init__(self, event_handler, game_map, player, entities, fov, gui):
-        self.event_handler = event_handler
+    def __init__(self, game_map, player, entities, fov, gui):
         self.game_map = game_map
         self.player = player
+        self.event_handler = EventHandler(self, player)
         self.entities = entities
         self.fov = fov
         self._update_fov()
         self.gui = gui
-        self.gui.update(self.player, [])
-        self.skip_enemy_turn = False
+        self.gui.update(self.player)
+        self.game_states = ['main']
+        self.game_state = 'main'
 
     def _get_dist_sorted_entities(self, entities):
         key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
         return sorted(entities, key=key)
 
-    def _handle_enemy_turns(self):
+    def handle_nonplayer_turns(self):
+        if self.game_state != 'main': return
         visible = self.game_map.visible
         tiles = self.game_map.tiles
-        msgs = []
         entities = self.entities - {self.player}
         entities = self._get_dist_sorted_entities(entities)
         for entity in entities:
             if entity.ai:
                 target = self.player if self.player.combat.is_alive() else None
                 action = entity.ai.get_action(self, target, visible, tiles)
-                msgs += action.perform(self, entity)
-        return msgs
-
-    def handle_event(self):
-        event = blt.read()
-        #self.event_handler.handle_event(event)
-        action = self.event_handler.dispatch(event)
-        if action is None: return
-        elif action.instant_action:
-            action.perform(self, self.player)
-            return
-        msgs = action.perform(self, self.player)
-        msgs += self._handle_enemy_turns()
-        self.msgs = msgs
+                action.perform(self, entity)
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
+    #TODO: move shield charge to combat update method that also regens hp
     def update(self):
-        self.gui.update(self.player, self.msgs)
         self._update_fov()
         self.player.combat.shields.charge()
 
@@ -89,51 +77,43 @@ class Engine:
     def load_terminal_settings(self):
         self.settings = config.TerminalSettings()
 
-    def set_event_handler(self, event_handler, **kwargs):
-        if 'inventory' in kwargs:
-            inventory = kwargs['inventory']
-        if 'valid_items' in kwargs:
-            valid_items = kwargs['valid_items']
-        if event_handler == 'main_game':
-            self.event_handler = MainGameEventHandler()
-        elif event_handler == 'game_over':
-            self.event_handler = GameOverEventHandler()
-        elif event_handler == 'inspect_inventory':
-            self.event_handler = InspectInventoryHandler(inventory, valid_items)
-        elif event_handler == 'drop_inventory':
-            self.event_handler = DropInventoryHandler(inventory, valid_items)
-        elif event_handler == 'equip_inventory':
-            self.event_handler = EquipInventoryHandler(inventory, valid_items)
-        elif event_handler == 'unequip_inventory':
-            self.event_handler = UnequipInventoryHandler(inventory, valid_items)
+    def _update_game_states(self):
+        self.game_state = self.game_states[-1]
 
+    def push_game_state(self, game_state):
+        self.game_states.append(game_state)
+        self._update_game_states()
+
+    def pop_game_state(self):
+        self.game_states.pop()
+        self._update_game_states()
 
 #TODO: move all engine to engine.py
 #TODO: add wizmode for starting game with all entities renderered
 # add wizmode for starting game with all entities renderered and
 # printing fps, etc.
+# also print fps in-game instead of to stdout
 def main():
-    event_handler = MainGameEventHandler()
     game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
     game_map.gen_map(config.GRIDW, config.GRIDH, config.BLOCK_SIZE)
     player = game_map.spawn_player()
     entities = {player}
     game_map.populate(entities)
-    fov = Fov(game_map.opaque)
+    fov = FieldOfView(game_map.opaque)
     gui = GUI(player.combat.hp, player.combat.max_hp, 0, 0)
-    engine = Engine(event_handler, game_map, player, entities, fov, gui)
+    engine = Engine(game_map, player, entities, fov, gui)
 
     blt.open()
     engine.load_terminal_settings()
-    i = 0
+    #i = 0
     start_time = time.time()
     while True:
         engine.render()
         if blt.has_input():
-            engine.handle_event()
+            engine.event_handler.handle_event()
             engine.update()
-        print(f'fps: {i // (time.time() - start_time)}')
-        i += 1
+        #print(f'fps: {i // (time.time() - start_time)}')
+        #i += 1
 
 
 if __name__ == "__main__":

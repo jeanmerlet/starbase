@@ -1,29 +1,29 @@
 import config
+from commands import *
 from display import MenuDisplay
 from entities import Equippable
 
 
 class Action:
     def __init__(self):
-        self.msgs = []
-        self.instant_action = False
+        pass
 
     def perform(self, engine, entity):
         raise NotImplementedError()
 
 
-class ItemAction(Action):
-    def __init__(self, item):
-        super().__init__()
-        self.item = item
-
+class QuitAction(Action):
     def perform(self, engine, entity):
-        raise NotImplementedError()
+        raise SystemExit()
+
+
+class WaitAction(Action):
+    def perform(self, engine, entity):
+        pass
 
 
 class DirectedAction(Action):
     def __init__(self, dx, dy):
-        super().__init__()
         self.dx = dx
         self.dy = dy
 
@@ -36,43 +36,37 @@ class DirectedAction(Action):
         return dest_x, dest_y
 
 
-class QuitAction(Action):
+class MoveAction(DirectedAction):
     def perform(self, engine, entity):
-        raise SystemExit()
-
-
-class WaitAction(Action):
-    def perform(self, engine, entity):
-        return self.msgs
-
-
-class DeathAction(Action):
-    def __init__(self):
-        super().__init__()
-
-    def perform(self, engine, entity):
-        if entity is engine.player:
-            self.msgs.append('You have DIED.')
-            engine.set_event_handler('game_over')
+        dest_x, dest_y = self._get_target_xy(entity)
+        blocking_ent = engine.get_blocking_entity_at_xy(dest_x, dest_y)
+        if blocking_ent:
+            msg = (f'ERROR: {blocking_ent.name} blocking')
+            engine.gui.log.add_message(msg)
+        elif not engine.game_map.in_bounds(dest_x, dest_y):
+            msg = ('ERROR: out of bounds!')
+            engine.gui.log.add_message(msg)
+        elif not engine.game_map.tiles[dest_x, dest_y].walkable:
+            msg = ("You can't go there.")
+            engine.gui.log.add_message(msg)
         else:
-            self.msgs.append(f'The {entity.name} dies.')
-        entity.name = f'{entity.name} corpse'
-        entity.char = '%'
-        entity.color = 'dark red'
-        entity.icon = '[color=dark red]%'
-        entity.blocking = False
-        entity.ai = None
-        entity.render_order = 2
-        return self.msgs
+            entity.move(self.dx, self.dy)
 
 
-class AttackAction(DirectedAction):
+class AttackAction(Action):
     def perform(self, engine, entity):
         raise NotImplementedError()
 
     def _check_for_death(self, engine, target):
         if not target.combat.is_alive():
-            self.msgs += DeathAction().perform(engine, target)
+            if target is engine.player:
+                engine.event_handler.push_cmds(GAME_OVER)
+                msg = ('You have DIED.')
+                engine.gui.log.add_message(msg)
+            else:
+                msg = (f'The {target.name} dies.')
+                engine.gui.log.add_message(msg)
+            target.die()
 
     def _roll_damage(self, entity, target):
         dam = int(entity.combat.att - target.combat.armor())
@@ -81,12 +75,16 @@ class AttackAction(DirectedAction):
         return dam
 
 
-class MeleeAction(AttackAction):
+class MeleeAction(DirectedAction, AttackAction):
+    def __init__(self, dx, dy):
+        DirectedAction.__init__(self, dx, dy)
+
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         target = engine.get_blocking_entity_at_xy(dest_x, dest_y)
-        if not target:
-            self.msgs.append('Nothing there.')
+        if target is None:
+            msg = ('Nothing there.')
+            engine.gui.log.add_message(msg)
         else:
             dam = self._roll_damage(entity, target)
             if entity is engine.player:
@@ -98,36 +96,22 @@ class MeleeAction(AttackAction):
                 verb = 'hits'
                 obj = 'you'
             if dam > 0:
-                self.msgs.append(f'{subj} {verb} {obj} for {dam} damage.')
+                msg = (f'{subj} {verb} {obj} for {dam} damage.')
+                engine.gui.log.add_message(msg)
                 target.combat.set_hp(target.combat.hp - dam)
             else:
-                self.msgs.append(f'{subj} {verb} {obj} but does no damage.')
-        self._check_for_death(engine, target)
-        return self.msgs
-
-
-class MoveAction(DirectedAction):
-    def perform(self, engine, entity):
-        dest_x, dest_y = self._get_target_xy(entity)
-        blocking_ent = engine.get_blocking_entity_at_xy(dest_x, dest_y)
-        if blocking_ent:
-            self.msgs.append(f'ERROR: {blocking_ent.name} blocking')
-        elif not engine.game_map.in_bounds(dest_x, dest_y):
-            self.msgs.append('ERROR: out of bounds!')
-        elif not engine.game_map.tiles[dest_x, dest_y].walkable:
-            self.msgs.append("You can't go there.")
-        else:
-            entity.move(self.dx, self.dy)
-        return self.msgs
+                msg = (f'{subj} {verb} {obj} but does no damage.')
+                engine.gui.log.add_message(msg)
+            self._check_for_death(engine, target)
 
 
 class CheckAction(DirectedAction):
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         if engine.get_blocking_entity_at_xy(dest_x, dest_y):
-            return MeleeAction(self.dx, self.dy).perform(engine, entity)
+            engine.event_handler.actions.append(MeleeAction(self.dx, self.dy))
         else:
-            return MoveAction(self.dx, self.dy).perform(engine, entity)
+            engine.event_handler.actions.append(MoveAction(self.dx, self.dy))
 
 
 class PickupAction(Action):
@@ -139,137 +123,168 @@ class PickupAction(Action):
             if not inventory.is_full():
                 inventory.pickup(item)
                 engine.entities.remove(item)
-                self.msgs.append(f"You pickup {item.name}.")
+                msg = (f"You pickup {item.name}.")
+                engine.gui.log.add_message(msg)
             else:
-                self.msgs.append(f"There's no room for {item.name}.")
+                msg = (f"There's no room for {item.name}.")
+                engine.gui.log.add_message(msg)
                 engine.no_turn_taken = True
         else:
-            self.msgs.append("There's nothing here to pick up.")
+            msg = ("There's nothing to pick up here.")
+            engine.gui.log.add_message(msg)
             engine.no_turn_taken = True
-        return self.msgs
 
 
-class InspectItem(ItemAction):
-    def __init__(self, item):
-        super().__init__(item)
-        self.instant_action = True
+class SelectAction(Action):
+    def __init__(self, selection):
+        self.selection = selection
 
     def perform(self, engine, entity):
-        w = config.INVENTORY_WIDTH
-        h = config.INVENTORY_HEIGHT
-        x = (config.SCREEN_WIDTH - config.INVENTORY_WIDTH) // 2 + 2
-        y = (config.SCREEN_HEIGHT - h) // 2 + 2
-        engine.set_event_handler('')
-        engine.gui.menu = MenuDisplay(x, y, w, h, names, self.menu_title)
-        print(f'This is a nice looking {self.item.name}.')
-        return None
+        raise NotImplementedError()
 
 
-class DropItem(ItemAction):
+class DropItem(SelectAction):
     def perform(self, engine, entity):
-        entity.inventory.drop(self.item)
-        self.item.x = entity.x
-        self.item.y = entity.y
-        engine.entities.add(self.item)
-        self.msgs.append(f"You drop {self.item.name}.")
-        CloseMenuAction().perform(engine, entity)
-        return self.msgs
+        item = entity.inventory.items[self.selection]
+        if item is None: return
+        if isinstance(item, Equippable) and item.equipped: return
+        entity.inventory.drop(item)
+        item.x = entity.x
+        item.y = entity.y
+        engine.entities.add(item)
+        msg = (f"You drop {item.name}.")
+        engine.gui.log.add_message(msg)
+        engine.event_handler.actions.append(CloseMenuAction())
 
 
-class EquipItem(ItemAction):
+class EquipItem(SelectAction):
     def perform(self, engine, entity):
-        slot = self.item.slot_type
+        item = entity.inventory.items[self.selection]
+        if item is None: return
+        if not isinstance(item, Equippable) or item.equipped: return
+        slot = item.slot_type
         item_in_slot = entity.equipment.get_item_in_slot(slot)
         if item_in_slot:
-            self.msgs += UnequipItem(item_in_slot).perform(engine, entity)
-        entity.equipment.equip_to_slot(slot, self.item)
-        self.item.equipped = True
-        self.item.name = self.item.name + ' (equipped)'
-        self.msgs.append(f'You equip {self.item.name}.')
-        CloseMenuAction().perform(engine, entity)
-        return self.msgs
+            UnequipItem(item_in_slot).perform(engine, entity)
+        entity.equipment.equip_to_slot(slot, item)
+        item.equipped = True
+        item.name = item.name + ' (equipped)'
+        msg = (f'You equip {item.name}.')
+        engine.gui.log.add_message(msg)
+        engine.event_handler.actions.append(CloseMenuAction())
 
 
-class UnequipItem(ItemAction):
+class UnequipItem(SelectAction):
     def perform(self, engine, entity):
-        slot = self.item.slot_type
+        item = entity.inventory.items[self.selection]
+        if item is None: return
+        if not isinstance(item, Equippable) or not item.equipped: return
+        slot = item.slot_type
         entity.equipment.unequip_from_slot(slot)
-        self.item.equipped = False
-        self.item.name = self.item.name[:-11]
-        self.msgs.append(f'You unequip {self.item.name}.')
-        CloseMenuAction().perform(engine, entity)
-        return self.msgs
+        item.equipped = False
+        item.name = item.name[:-11]
+        msg = (f'You unequip {item.name}.')
+        engine.gui.log.add_message(msg)
+        engine.event_handler.actions.append(CloseMenuAction())
 
 
 class CloseMenuAction(Action):
-    def __init__(self):
-        self.instant_action = True
+    def perform(self, engine, entity):
+        engine.gui.menus.pop()
+        engine.event_handler.pop_cmds()
+        engine.pop_game_state()
+
+
+class OpenMenuAction(Action):
+    def _create_menu(self, engine, w, h, dx, dy, title, menu_items, menu_type):
+        x = (config.SCREEN_WIDTH - w) // 2 + dx
+        y = (config.SCREEN_HEIGHT - h) // 2 + dy
+        engine.gui.menus.append(MenuDisplay(x, y, w, h, title, menu_items))
+        engine.event_handler.push_cmds(MENU)
+        engine.push_game_state(menu_type)
 
     def perform(self, engine, entity):
-        engine.gui.menu = None
-        engine.set_event_handler('main_game')
+        raise NotImplementedError()
 
 
-class InventoryMenu(Action):
-    def __init__(self):
-        self.instant_action = True
+class InspectItem(SelectAction, OpenMenuAction):
+    def __init__(self, selection):
+        SelectAction.__init__(self, selection)
+
+    def perform(self, engine, entity):
+        item = entity.inventory.items[self.selection]
+        if item is None: return
+        w = config.INVENTORY_WIDTH
+        h = config.INVENTORY_HEIGHT
+        dx, dy = 2, 2
+        title = f'{item.name.capitalize()}'
+        menu_items = item.get_stats()
+        menu_type = 'inspect_item'
+        self._create_menu(engine, w, h, dx, dy, title, menu_items, menu_type)
+
+
+class OpenInventoryMenu(OpenMenuAction):
+    def _get_menu_items(self, inventory):
+        menu_items = []
+        for slot, item in inventory.items.items():
+            if item is None: continue
+            if self._item_is_valid(item):
+                text = f'{slot}. [color={item.color}]{item.name}[/color]'
+                menu_items.append(text)
+        return menu_items
 
     def perform(self, engine, entity):
         w = config.INVENTORY_WIDTH
         h = config.INVENTORY_HEIGHT
-        x = (config.SCREEN_WIDTH - config.INVENTORY_WIDTH) // 2
-        y = (config.SCREEN_HEIGHT - h) // 2
+        dx, dy = 0, 0
         inventory = entity.inventory
-        items, names = self._get_valid_inventory_items_names(inventory)
-        self._set_inventory_options(inventory)
-        engine.set_event_handler(self.event_handler, inventory=inventory,
-                                 valid_items=items)
-        engine.gui.menu = MenuDisplay(x, y, w, h, names, self.menu_title)
-
-    def _get_valid_inventory_items_names(self, inventory):
-        valid_items, menu_names = [], []
-        for slot, item in inventory.items.items():
-            if item is None: continue
-            if self._item_is_valid(item):
-                valid_items.append(item)
-                menu_name = f'{slot}. [color={item.color}]{item.name}[/color]'
-                menu_names.append(menu_name)
-        return valid_items, menu_names
+        title = self._get_title(inventory)
+        menu_items = self._get_menu_items(inventory)
+        menu_type = self.menu_type
+        self._create_menu(engine, w, h, dx, dy, title, menu_items, menu_type)
 
 
-class InspectInventoryMenu(InventoryMenu):
-    def _set_inventory_options(self, inventory):
+class InventoryMenu(OpenInventoryMenu):
+    def __init__(self):
+        self.menu_type = 'inventory_menu'
+
+    def _get_title(self, inventory):
         inv_size = inventory.size
-        inv_avail = inv_size - len(inventory.items)
-        self.menu_title = f'Inventory: {inv_avail}/{inv_size} spots available'
-        self.event_handler = 'inspect_inventory'
+        inv_unavail = len([k for k, v in inventory.items.items() if v])
+        return f'Inventory: {inv_unavail}/{inv_size} spots taken'
 
     def _item_is_valid(self, item):
         return True
 
 
-class DropInventoryMenu(InventoryMenu):
-    def _set_inventory_options(self, inventory):
-        self.menu_title = f'Drop which item?'
-        self.event_handler = 'drop_inventory'
+class DropMenu(OpenInventoryMenu):
+    def __init__(self):
+        self.menu_type = 'drop_menu'
+
+    def _get_title(self, inventory):
+        return 'Drop which item?'
 
     def _item_is_valid(self, item):
         return not item.equipped
 
 
-class EquipInventoryMenu(InventoryMenu):
-    def _set_inventory_options(self, inventory):
-        self.menu_title = f'Equip what?'
-        self.event_handler = 'equip_inventory'
+class EquipMenu(OpenInventoryMenu):
+    def __init__(self):
+        self.menu_type = 'equip_menu'
+
+    def _get_title(self, inventory):
+        return 'Equip which item?'
 
     def _item_is_valid(self, item):
         return (isinstance(item, Equippable) and not item.equipped)
 
 
-class UnequipInventoryMenu(InventoryMenu):
-    def _set_inventory_options(self, inventory):
-        self.menu_title = f'Unequip what?'
-        self.event_handler = 'unequip_inventory'
+class UnequipMenu(OpenInventoryMenu):
+    def __init__(self):
+        self.menu_type = 'unequip_menu'
+
+    def _get_title(self, inventory):
+        return 'Unequip which item?'
 
     def _item_is_valid(self, item):
         return (isinstance(item, Equippable) and item.equipped)

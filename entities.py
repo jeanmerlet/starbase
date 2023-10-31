@@ -25,11 +25,23 @@ class Actor(Entity):
         self.x += dx
         self.y += dy
 
+    def die(self):
+        self.name = f'{self.name} corpse'
+        self.char = '%'
+        self.color = 'dark red'
+        self.icon = '[color=dark red]%'
+        self.blocking = False
+        self.ai = None
+        self.render_order = 2
+
 
 class Item(Entity):    
     def __init__(self, name, x, y, char, color, blocking):
         super().__init__(name, x, y, char, color, blocking, render_order=1)
         self.ai = None
+
+    def get_stats(self):
+        return [f'This is a nice looking {self.name}']
 
 
 class Consumable:

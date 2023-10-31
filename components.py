@@ -44,6 +44,7 @@ class Inventory:
 
 
 class Equipment:
+    #TODO: change slots to a dict
     def __init__(self, weapon, armor, shields):
         self.weapon_slot = weapon
         self.armor_slot = armor

@@ -60,20 +60,17 @@ class LogDisplay(Display):
         else:
             return [msg]
 
-    def update(self, msgs):
+    def add_message(self, msg):
         #TODO: update to deal with last old message being repeated after
         # a new message is appended that isn't repeated
-        new_msgs = []
-        for msg in msgs:
-            if self.old_msgs and self.old_msgs[-1][:len(msg)] == msg:
-                self.repeat += 1
-                old_msg = self.old_msgs[-1][:len(msg)]
-                old_msg += (f' x{self.repeat + 1}').ljust(5)
-                self.old_msgs[-1] = old_msg
-            else:
-                new_msgs.append(msg)
-                self.repeat = 0
-        self.new_msgs = new_msgs
+        if self.old_msgs and self.old_msgs[-1][:len(msg)] == msg:
+            self.repeat += 1
+            old_msg = self.old_msgs[-1][:len(msg)]
+            old_msg += (f' x{self.repeat + 1}').ljust(5)
+            self.old_msgs[-1] = old_msg
+        else:
+            self.new_msgs.append(msg)
+            self.repeat = 0
 
     def render(self):
         self.y = self.orig_y
@@ -100,12 +97,12 @@ class LogDisplay(Display):
 
 
 class MenuDisplay(Display):
-    def __init__(self, x, y, w, h, menu_items, menu_title):
+    def __init__(self, x, y, w, h, menu_title, menu_items):
         super().__init__(x, y)
         self.orig_y = y
         self.w, self.h = w, h
-        self.menu_items = menu_items
         self.menu_title = menu_title
+        self.menu_items = menu_items
         self.border_tile = '[color=menu_border]\u2592[/color]'
 
     def _render_border(self):
@@ -140,16 +137,17 @@ class GUI:
                                       'light blue', 'darker blue',
                                       shields_hp, max_shields_hp)
         self.log = LogDisplay(logx, logy, hpx - 1, 5)
-        self.menu = None
+        self.menus = []
 
     def render(self):
         self.hp_bar.render()
         self.shields_bar.render()
         self.log.render()
-        if self.menu: self.menu.render()
+        if self.menus:
+            for menu in self.menus:
+                menu.render()
 
-    def update(self, player, msgs):
+    def update(self, player):
         self.hp_bar.update(player.combat.hp, player.combat.max_hp)
         self.shields_bar.update(player.combat.shields.hp,
                                 player.combat.shields.max_hp)
-        self.log.update(msgs)
