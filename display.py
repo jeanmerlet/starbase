@@ -45,7 +45,7 @@ class LogDisplay(Display):
         self.orig_y = y
         self.w, self.h = w, h
         self.max_h = y + h
-        self.new_msgs, self.old_msgs = [], []
+        self.msgs = []
         self.repeat = 0
         self.max_l = self.w - 5
 
@@ -61,39 +61,25 @@ class LogDisplay(Display):
             return [msg]
 
     def add_message(self, msg):
-        #TODO: update to deal with last old message being repeated after
-        # a new message is appended that isn't repeated
-        if self.old_msgs and self.old_msgs[-1][:len(msg)] == msg:
+        if self.msgs and self.msgs[-1][:len(msg)] == msg:
             self.repeat += 1
-            old_msg = self.old_msgs[-1][:len(msg)]
-            old_msg += (f' x{self.repeat + 1}').ljust(5)
-            self.old_msgs[-1] = old_msg
+            last_msg = self.msgs[-1][:len(msg)]
+            last_msg += (f' x{self.repeat + 1}').ljust(5)
+            self.msgs[-1] = last_msg
         else:
-            self.new_msgs.append(msg)
+            self.msgs.append(msg)
             self.repeat = 0
 
     def render(self):
         self.y = self.orig_y
         blt.clear_area(self.x, self.y, self.w, self.h)
-        num_new_msgs = len(self.new_msgs)
-        new_msgs = []
-        for msg in self.new_msgs:
-            new_msgs += self._wrap_msg(msg)
-        new_msgs = new_msgs[-self.h:]
-        n_lines = self.h - len(new_msgs)
-        if n_lines > 0:
-            old_msgs = []
-            for msg in self.old_msgs[-n_lines:]:
-                old_msgs += self._wrap_msg(msg)
-            old_msgs = old_msgs[-n_lines:]
-            msgs = old_msgs + new_msgs
-        else:
-            msgs = new_msgs
-        for msg in msgs:
+        wrapped_msgs = []
+        for msg in self.msgs[-self.h:]:
+            wrapped_msgs += self._wrap_msg(msg)
+        wrapped_msgs = wrapped_msgs[-self.h:]
+        for msg in wrapped_msgs:
             blt.print(self.x, self.y, msg)
             self.y += 1
-        self.old_msgs += self.new_msgs
-        self.new_msgs = []
 
 
 class MenuDisplay(Display):
