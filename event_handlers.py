@@ -4,72 +4,103 @@ from actions import *
 
 
 class EventHandler:
-    def __init__(self, engine, player):
-        self.engine = engine
-        self.player = player
-        self.commands = [MAIN]
-        self.active_commands = MAIN
+    def __init__(self):
+        pass
 
-    def handle_event(self):
+    def handle_event(self, engine, player):
         event = blt.read()
-        action = None
-        for cmd_domain in self.active_commands:
-            if event in cmd_domain:
-                action = self._dispatch(cmd_domain, event)
+        action = self._dispatch(event, engine)
         if action is None: return
         self.actions = [action]
         for action in self.actions:
-            action.perform(self.engine, self.player)
-        self.engine.handle_nonplayer_turns()
+            action.perform(engine, player)
+        engine.handle_nonplayer_turns()
 
-    def _dispatch(self, cmd_domain, event):
-        if cmd_domain == MOVE_CMDS:
-            dx, dy = cmd_domain[event]
+    def _dispatch(self, event, engine):
+        raise NotImplementedError()
+
+
+class MainEventHandler(EventHandler):
+    def _dispatch(self, event, engine):
+        action = None
+        if event in MOVE_CMDS:
+            dx, dy = MOVE_CMDS[event]
             action = CheckAction(dx, dy)
-        elif cmd_domain == WAIT_CMDS:
+        elif event in WAIT_CMDS:
             action = WaitAction()
-        elif cmd_domain == MAIN_CMDS:
+        elif event in MAIN_CMDS:
             if event == blt.TK_D:
                 action = DropMenu()
             elif event == blt.TK_E:
                 action = EquipMenu()
+            elif event == blt.TK_F:
+                action = TargetAction()
             elif event == blt.TK_G:
                 action = PickupAction()
             elif event == blt.TK_I:
                 action = InventoryMenu()
             elif event == blt.TK_U:
                 action = UnequipMenu()
-        elif cmd_domain == MENU_CMDS:
+        elif event in QUIT_CMD:
+            action = QuitAction()
+        return action
+
+
+class MenuEventHandler(EventHandler):
+    def _dispatch(self, event, engine):
+        action = None
+        if event in MENU_CMDS:
             if event == blt.TK_ESCAPE:
                 action = CloseMenuAction()
             elif event in range(4, 30):
                 selection = chr(event + 93)
-                game_state = self.engine.game_state
-                if game_state == 'inventory_menu':
-                    action = InspectItem(selection)
-                elif game_state == 'drop_menu':
-                    action = DropItem(selection)
-                elif game_state == 'equip_menu':
-                    action = EquipItem(selection)
-                elif game_state == 'unequip_menu':
-                    action = UnequipItem(selection)
-        elif cmd_domain == QUIT_CMD:
-            action = QuitAction()
+                action = self._get_action(selection)
         return action
 
-    def _update_cmds(self):
-        self.active_commands = self.commands[-1]
 
-    def push_cmds(self, cmd_set):
-        self.commands.append(cmd_set)
-        self._update_cmds()
+class InspectItemHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return None
 
-    def pop_cmds(self):
-        self.commands.pop()
-        self._update_cmds()
 
-    def insert_action(self, action, idx):
-        self.actions.insert(idx, action)
+class DropMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return DropItem(selection)
 
-    def clear_action(self, action):
-        self.actions.remove(action)
+
+class EquipMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return EquipItem(selection)
+
+
+class InventoryMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return InspectItem(selection)
+
+
+class UnequipMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return UnequipItem(selection)
+
+
+class TargettingEventHandler(EventHandler):
+    def _dispatch(self, event, engine):
+        action = None
+        if event in TARGET_CMDS:
+            if event == blt.TK_TAB:
+                action = NextTargetAction()
+            elif (event == blt.TK_F or event == blt.TK_ENTER or
+                 event == blt.TK_KP_ENTER):
+                action = ConfirmTargetAction()
+        elif event in MOVE_CMDS:
+            dx, dy = MOVE_CMDS[event]
+            action = MoveTargetAction(dx, dy)
+        return action
+
+
+class GameOverEventHandler(EventHandler):
+    def _dispatch(self, event, engine):
+        action = None
+        if event in QUIT_CMD:
+            action = QuitAction()
+        return action

@@ -59,8 +59,9 @@ MENU_CMDS = {
     blt.TK_Z,
 }
 
-MAIN = [ MOVE_CMDS, WAIT_CMDS, MAIN_CMDS, QUIT_CMD ]
-
-MENU = [ MENU_CMDS ]
-
-GAME_OVER = [ QUIT_CMD ]
+TARGET_CMDS = {
+    blt.TK_TAB,
+    blt.TK_F,
+    blt.TK_ENTER,
+    blt.TK_KP_ENTER
+}
