@@ -32,7 +32,6 @@ class Game:
             self.engine.render()
             if blt.has_input():
                 self.engine.event_handler.handle_event(self.engine)
-                self.engine.update()
 
 
 if __name__ == "__main__":

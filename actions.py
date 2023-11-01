@@ -111,14 +111,33 @@ class MeleeAction(DirectedAction, AttackAction):
 
 class TargetAction(Action):
     def perform(self, engine, entity):
-        ents = engine.get_ents_visible_from_xy(entity.x, entity.y)
+        ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
         if not ents:
             msg = 'Nothing to target.'
+            engine.gui.log.add_message(msg)
         else:
-            ents = engine.get_dist_sorted_entities(self, ents)
+            ents = engine.get_dist_sorted_entities(ents)
             target = ents[0]
+            entity.target = target
+            engine.gui.target_display.target = target
             engine.push_event_handler(event_handlers.TargettingEventHandler())
-            engine.push_game_state('targetting')
+
+
+class NextTargetAction(Action):
+    def perform(self, engine, entity):
+        ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
+        ents = engine.get_dist_sorted_entities(ents)
+        target = ents[(ents.index(entity.target) + 1) % len(ents)]
+        entity.target = target
+        engine.gui.target_display.target = target
+
+
+#TODO: cancelling does not give enemies a turn
+# (same with cancelling the inventory menu...)
+class CancelTargetAction(Action):
+    def perform(self, engine, entity):
+        engine.gui.target_display.target = None
+        engine.pop_event_handler()
 
 
 class CheckAction(DirectedAction):

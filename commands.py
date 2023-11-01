@@ -20,6 +20,7 @@ WAIT_CMDS = {
 MAIN_CMDS = {
     blt.TK_D,
     blt.TK_E,
+    blt.TK_F,
     blt.TK_G,
     blt.TK_I,
     blt.TK_U
@@ -29,8 +30,11 @@ QUIT_CMD = {
     blt.TK_Q
 }
 
+CANCEL_CMD = {
+    blt.TK_ESCAPE
+}
+
 MENU_CMDS = {
-    blt.TK_ESCAPE,
     blt.TK_A,
     blt.TK_B,
     blt.TK_C,

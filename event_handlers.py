@@ -50,10 +50,10 @@ class MainEventHandler(EventHandler):
 class MenuEventHandler(EventHandler):
     def _dispatch(self, event, engine):
         action = None
-        if event in MENU_CMDS:
-            if event == blt.TK_ESCAPE:
-                action = CloseMenuAction()
-            elif event in range(4, 30):
+        if event in CANCEL_CMD:
+            action = CloseMenuAction()
+        elif event in MENU_CMDS:
+            if event in range(4, 30):
                 selection = chr(event + 93)
                 action = self._get_action(selection)
         return action
@@ -87,7 +87,9 @@ class UnequipMenuHandler(MenuEventHandler):
 class TargettingEventHandler(EventHandler):
     def _dispatch(self, event, engine):
         action = None
-        if event in TARGET_CMDS:
+        if event in CANCEL_CMD:
+            action = CancelTargetAction()
+        elif event in TARGET_CMDS:
             if event == blt.TK_TAB:
                 action = NextTargetAction()
             elif (event == blt.TK_F or event == blt.TK_ENTER or

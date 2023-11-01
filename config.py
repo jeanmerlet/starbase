@@ -1,6 +1,14 @@
 from bearlibterminal import terminal as blt
 
 
+# map
+MAP_WIDTH = 138
+MAP_HEIGHT = 48
+GRIDW = 100
+GRIDH = 40
+BLOCK_SIZE = 20
+
+
 # gui
 SCREEN_WIDTH = 160
 SCREEN_HEIGHT = 54
@@ -11,13 +19,7 @@ VERT_PANEL_HEIGHT = 6
 INVENTORY_WIDTH = 40
 INVENTORY_HEIGHT = 29
 
-
-# map
-MAP_WIDTH = 138
-MAP_HEIGHT = 48
-GRIDW = 100
-GRIDH = 40
-BLOCK_SIZE = 20
+TARGETY = 10
 
 
 # blt

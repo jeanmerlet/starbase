@@ -4,9 +4,35 @@ import config
 import time
 
 
+class TargettingLine:
+    def __init__(self, start_x, start_y, end_x, end_y, color):
+        self.ox, self.oy = start_x + 0.5, start_y + 0.5
+        self.ex, self.ey = end_x + 0.5, end_y + 0.5
+        self.color = color
+
+    def render(self):
+        slope = (ex - ox) / (ey - oy)
+        tiles = []
+        while True:
+            next_tile = ox
+
+
 class Display:
     def __init__(self, x, y):
         self.x, self.y = x, y
+
+
+class TargetDisplay(Display):
+    def __init__(self, x, y):
+        super().__init__(x, y)
+        self.target = None
+
+    def render(self):
+        blt.clear_area(self.x, self.y, 20, 1)
+        target = self.target
+        if target:
+            target_text = f'[color={target.color}]{target.name}[/color]'
+            blt.print(self.x, self.y, target_text)
 
 
 class BarDisplay(Display):
@@ -125,6 +151,7 @@ class GUI:
                                       shields_hp, max_shields_hp)
         self.log = LogDisplay(logx, logy, hpx - 1, 5)
         self.menus = []
+        self.target_display = TargetDisplay(hpx, config.TARGETY)
         self.show_fps = False
         self.last_time = time.time()
 
@@ -132,6 +159,7 @@ class GUI:
         self.hp_bar.render()
         self.shields_bar.render()
         self.log.render()
+        self.target_display.render()
         if self.menus:
             for menu in self.menus:
                 menu.render()

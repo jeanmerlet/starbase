@@ -10,9 +10,9 @@ class Engine:
         self.player = player
         self.entities = entities
         self.fov = fov 
-        self._update_fov()
         self.gui = gui 
         self.gui.update(self.player)
+        self._update()
 
     def get_dist_sorted_entities(self, entities):
         key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
@@ -30,13 +30,14 @@ class Engine:
                 target = self.player if self.player.is_alive() else None
                 action = entity.ai.get_action(self, target, visible, tiles)
                 action.perform(self, entity)
+        self._update()
 
     def _update_fov(self):
         self.game_map.visible[:, :] = False
         self.fov.do_fov(self.player, self.game_map.visible)
         self.game_map.explored |= self.game_map.visible
 
-    def update(self):
+    def _update(self):
         self._update_fov()
         self.player.combat.tick()
         self.gui.update(self.player)
@@ -67,12 +68,12 @@ class Engine:
                 items.append(ent)
         return items
 
-    def get_ents_visible_from_xy(self, x, y):
+    def get_blocking_ents_visible_from_xy(self, x, y):
         ents = []
         for ent in self.entities:
             if self.game_map.visible[ent.x, ent.y]:
-                if not (x == ent.x and y == ent.y):
-                    ents.append[ent]
+                if not (x == ent.x and y == ent.y) and ent.blocking:
+                    ents.append(ent)
         return ents
 
     def _update_event_handlers(self):
