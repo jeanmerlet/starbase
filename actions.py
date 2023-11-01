@@ -68,13 +68,14 @@ class AttackAction(Action):
                 engine.gui.log.add_message(msg)
             target.die()
 
-    def _roll_damage(self, entity, target):
-        dam = int(entity.combat.att - target.combat.armor())
+    def _roll_damage(self, attack, entity, target):
+        dam = attack.roll_damage()
         if target.combat.shields:
             dam = target.combat.shields.take_hit(dam)
         return dam
 
 
+#TODO: log text includes shields
 class MeleeAction(DirectedAction, AttackAction):
     def __init__(self, dx, dy):
         DirectedAction.__init__(self, dx, dy)
@@ -86,22 +87,23 @@ class MeleeAction(DirectedAction, AttackAction):
             msg = ('Nothing there.')
             engine.gui.log.add_message(msg)
         else:
-            dam = self._roll_damage(entity, target)
-            target.combat.hit_points.take_damage(dam)
-            if entity is engine.player:
-                subj = 'You'
-                verb = 'hit'
-                obj = f'the {target.name}'
-            else:
-                subj = f'The {entity.name}'
-                verb = 'hits'
-                obj = 'you'
-            if dam > 0:
-                msg = (f'{subj} {verb} {obj} for {dam} damage.')
-                engine.gui.log.add_message(msg)
-            else:
-                msg = (f'{subj} {verb} {obj} but does no damage.')
-                engine.gui.log.add_message(msg)
+            for attack in entity.combat.attacks:
+                dam = self._roll_damage(attack, entity, target)
+                target.combat.hit_points.take_damage(dam)
+                if entity is engine.player:
+                    subj = 'You'
+                    verb = 'hit'
+                    obj = f'the {target.name}'
+                else:
+                    subj = f'The {entity.name}'
+                    verb = 'hits'
+                    obj = 'you'
+                if dam > 0:
+                    msg = (f'{subj} {verb} {obj} for {dam} damage.')
+                    engine.gui.log.add_message(msg)
+                else:
+                    msg = (f'{subj} {verb} {obj} but does no damage.')
+                    engine.gui.log.add_message(msg)
             self._check_for_death(engine, target)
 
 

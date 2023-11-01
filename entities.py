@@ -64,15 +64,11 @@ class HealingConsumable(Consumable):
 
 
 class Equippable(Item):
-    def __init__(self, name, x, y, char, color, blocking, equip_time,
-                 armor_bonus, def_bonus, att_bonus, dam_bonus, shp_bonus,
-                 scr_bonus, scd_bonus, slot_type):
-        super().__init__(name, x, y, char, color, blocking)
-        self.equip_time = equip_time
-        self.armor_bonus = armor_bonus
-        self.def_bonus = def_bonus
-        self.att_bonus = att_bonus
-        self.dam_bonus = dam_bonus
+    def __init__(self, name, x, y, char, color, damage, damage_type,
+                 shp_bonus, scr_bonus, scd_bonus, slot_type):
+        super().__init__(name, x, y, char, color, blocking=False)
+        self.damage = damage
+        self.damage_type = damage_type
         self.shp_bonus = shp_bonus
         self.scr_bonus = scr_bonus
         self.scd_bonus = scd_bonus

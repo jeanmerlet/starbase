@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Entity, Actor, Equippable
-from components import Combat, HitPoints, Shields, Inventory, Equipment
+from components import *
 from ai import BaseAI, HostileEnemy
 from tiles import *
 
@@ -18,7 +18,8 @@ class Map:
         'actor': Actor,
         'equippable': Equippable
     }
-    ENT_DATA = pd.read_csv('./data/entities.csv', index_col=0, header=0)
+    ENT_DATA = pd.read_csv('./data/entities.tsv', sep='\t', index_col=0,
+                           header=0)
 
     def __init__(self, width, height):
         self.width = width
@@ -115,7 +116,7 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.5, 0.1, 0.2, 0.1, 0.1]
+        dist = [0.3, 0.1, 0.1, 0.1, 0.1, 0.3]
         #dist = [0.4, 0, 0.2, 0, 0.4]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
@@ -138,10 +139,22 @@ class Map:
                 props[col] = self.ENT_DATA.loc[name, col]
         return ent_class, props
 
+    def _get_actor_attacks(self, props):
+        names = props['attacks'].split(',')
+        dice = props['damage'].split(',')
+        types = props['dam_type'].split(',')
+        attacks = []
+        for i in range(len(names)):
+            attack = Attack(names[i], dice[i], types[i])
+            attacks.append(attack)
+        return attacks
+
     def _spawn_actor(self, name, props, x, y):
         hp = HitPoints(props['hp'], props['regen_rate'])
-        combat = Combat(hp, props['base_armor'], None,
-                        props['base_attack'])
+        shields = Shields(props['base_shp'], props['base_scr'],
+                          props['base_scd'])
+        attacks = self._get_actor_attacks(props)
+        combat = Combat(hp, shields, attacks)
         ai = HostileEnemy()
         fov_radius = None
         inventory = Inventory()
@@ -150,14 +163,13 @@ class Map:
                        props['blocking'], combat, ai, fov_radius,
                        inventory, equipment)
         entity.ai.entity = entity
-        entity.inventory.entity = entity
+        entity.equipment.entity = entity
+        entity.equipment.update_actor_stats()
         return entity
 
     def _spawn_equippable(self, name, props, x, y):
         entity = Equippable(name, x, y, props['char'], props['color'],
-                            props['blocking'], props['equip_time'],
-                            props['armor_bonus'], props['def_bonus'],
-                            props['att_bonus'], props['dam_bonus'],
+                            props['damage'], props['dam_type'],
                             props['shp_bonus'], props['scr_bonus'],
                             props['scd_bonus'], props['slot_type'])
         return entity
@@ -192,9 +204,8 @@ class Map:
         startx, starty = self._get_start_xy()
         hit_points = HitPoints(30, 0.1)
         shields = Shields(0, 0, 0)
-        armor = 0
-        att = 10
-        combat = Combat(hit_points, armor, shields, att)
+        attacks = [Attack('punch', '3d4', 'kinetic')]
+        combat = Combat(hit_points, shields, attacks)
         ai = BaseAI()
         inventory = Inventory()
         equipment = Equipment(None, None, None)
@@ -203,5 +214,5 @@ class Map:
                        fov_radius=7, inventory=inventory, equipment=equipment)
         player.ai.entity = player
         player.equipment.entity = player
-        player.equipment.update_entity_stats()
+        player.equipment.update_actor_stats()
         return player

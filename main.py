@@ -45,7 +45,7 @@ class Engine:
 
     def update(self):
         self._update_fov()
-        self.player.combat.update()
+        self.player.combat.tick()
         self.gui.update(self.player)
 
     def _get_render_sorted_entities(self):
@@ -55,8 +55,8 @@ class Engine:
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
         for ent in self._get_render_sorted_entities():
-            if self.game_map.visible[ent.x, ent.y]:
-            #if True:
+            #if self.game_map.visible[ent.x, ent.y]:
+            if True:
                 ent.render(blt)
         self.gui.render()
         blt.refresh()
