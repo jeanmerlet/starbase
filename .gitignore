@@ -6,3 +6,4 @@
 
 # libreoffice cache
 *.csv#
+*.tsv#
