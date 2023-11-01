@@ -1,6 +1,7 @@
 from bearlibterminal import terminal as blt
 import textwrap
 import config
+import time
 
 
 class Display:
@@ -124,6 +125,8 @@ class GUI:
                                       shields_hp, max_shields_hp)
         self.log = LogDisplay(logx, logy, hpx - 1, 5)
         self.menus = []
+        self.show_fps = False
+        self.last_time = time.time()
 
     def render(self):
         self.hp_bar.render()
@@ -132,6 +135,11 @@ class GUI:
         if self.menus:
             for menu in self.menus:
                 menu.render()
+        if self.show_fps:
+            blt.clear_area(1, 1, 8, 1)
+            fps = 1 // (time.time() - self.last_time)
+            blt.print(1, 1, f'fps: {fps}')
+            self.last_time = time.time()
 
     def update(self, player):
         self.hp_bar.update(player.combat.hit_points.hp,

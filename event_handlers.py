@@ -7,7 +7,8 @@ class EventHandler:
     def __init__(self):
         pass
 
-    def handle_event(self, engine, player):
+    def handle_event(self, engine):
+        player = engine.player
         event = blt.read()
         action = self._dispatch(event, engine)
         if action is None: return

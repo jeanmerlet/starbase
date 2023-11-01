@@ -6,11 +6,9 @@ from fov import FieldOfView
 from display import GUI
 from engine import Engine
 import config
-import time
 
 
 #TODO: add wizmode for starting game with all entities renderered
-#TODO: print fps in-game instead of to stdout
 class Game:
     def __init__(self):
         event_handler = MainEventHandler()
@@ -25,21 +23,19 @@ class Game:
         self.engine = Engine(event_handler, game_map, player, entities, fov,
                              gui)
 
-    def run(self):
+    def initialize(self):
         blt.open()
-        self.engine.load_terminal_settings()
-        #i = 0
-        #start_time = time.time()
+        config.set_blt_settings()
+
+    def run(self):
         while True:
             self.engine.render()
             if blt.has_input():
-                self.engine.event_handler.handle_event(self.engine,
-                                                       self.engine.player)
+                self.engine.event_handler.handle_event(self.engine)
                 self.engine.update()
-            #print(f'fps: {i // (time.time() - start_time)}')
-            #i += 1
 
 
 if __name__ == "__main__":
     game = Game()
+    game.initialize()
     game.run()

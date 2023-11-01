@@ -43,6 +43,7 @@ class Engine:
 
     def _get_render_sorted_entities(self):
         return sorted(self.entities, key=lambda x: -x.render_order)
+
     def render(self):
         blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
         self.game_map.render(blt)
@@ -73,9 +74,6 @@ class Engine:
                 if not (x == ent.x and y == ent.y):
                     ents.append[ent]
         return ents
-
-    def load_terminal_settings(self):
-        self.settings = config.TerminalSettings()
 
     def _update_event_handlers(self):
         self.event_handler = self.event_handlers[-1]
