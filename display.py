@@ -4,6 +4,33 @@ import config
 import time
 
 
+class Viewport:
+    def __init__(self, x, y, w, h):
+        self.x, self.y = x, y
+        self.w, self.h = w // 4, h // 2
+        self.x_off = self.w // 2
+        self.y_off = self.h // 2
+
+    def render(self, game_map, entities, player):
+        blt.clear_area(self.x, self.y, self.w*4, self.h*2)
+        px, py = player.x, player.y
+        for i in range(1, self.w):
+            for j in range(1, self.h):
+                x = px - self.x_off + i
+                y = py - self.y_off + j
+                if game_map.in_bounds(x, y) and game_map.explored[x, y]:
+                    if game_map.visible[x, y]:
+                        blt.print(i*4, j*2, game_map.tiles[x, y].light_icon)
+                    else:
+                        blt.print(i*4, j*2, game_map.tiles[x, y].dark_icon)
+
+        for ent in entities:
+            x = self.x_off - (px - ent.x)
+            y = self.y_off - (py - ent.y)
+            if game_map.visible[ent.x, ent.y]:
+                blt.print(x*4, y*2, ent.icon)
+
+
 class TargettingLine:
     def __init__(self, start_x, start_y, end_x, end_y, color):
         self.ox, self.oy = start_x + 0.5, start_y + 0.5
@@ -20,6 +47,9 @@ class TargettingLine:
 class Display:
     def __init__(self, x, y):
         self.x, self.y = x, y
+
+    def render(self):
+        raise NotImplementedError()
 
 
 class TargetDisplay(Display):

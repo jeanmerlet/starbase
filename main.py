@@ -3,7 +3,7 @@ from bearlibterminal import terminal as blt
 from event_handlers import MainEventHandler
 from game_map import Map
 from fov import FieldOfView
-from display import GUI
+from display import Viewport, GUI
 from engine import Engine
 import config
 
@@ -18,10 +18,11 @@ class Game:
         entities = {player}
         game_map.populate(entities)
         fov = FieldOfView(game_map.opaque)
+        viewport = Viewport(0, 0, config.VIEWPORT_WIDTH, config.VIEWPORT_HEIGHT)
         gui = GUI(player.combat.hit_points.hp, player.combat.hit_points.max_hp,
                   player.combat.shields.hp, player.combat.shields.max_hp)
         self.engine = Engine(event_handler, game_map, player, entities, fov,
-                             gui)
+                             viewport, gui)
 
     def initialize(self):
         blt.open()

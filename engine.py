@@ -3,13 +3,15 @@ from entities import Item
 
 
 class Engine:
-    def __init__(self, event_handler, game_map, player, entities, fov, gui):
+    def __init__(self, event_handler, game_map, player, entities, fov,
+                 viewport, gui):
         self.event_handler = event_handler
         self.event_handlers = [event_handler]
         self.game_map = game_map
         self.player = player
         self.entities = entities
         self.fov = fov 
+        self.viewport = viewport
         self.gui = gui 
         self.gui.update(self.player)
         self._update()
@@ -46,12 +48,14 @@ class Engine:
         return sorted(self.entities, key=lambda x: -x.render_order)
 
     def render(self):
-        blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
-        self.game_map.render(blt)
-        for ent in self._get_render_sorted_entities():
+        #blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
+        #self.game_map.render(blt)
+        #for ent in self._get_render_sorted_entities():
             #if self.game_map.visible[ent.x, ent.y]:
-            if True:
-                ent.render(blt)
+            #if True:
+                #ent.render(blt)
+        entities = self._get_render_sorted_entities()
+        self.viewport.render(self.game_map, entities, self.player)
         self.gui.render()
         blt.refresh()
 
