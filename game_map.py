@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
-from entities import Entity, Actor, Equippable
+from entities import Actor, Consumable, Equippable
 from components import *
 from ai import BaseAI, HostileEnemy
 from tiles import *
@@ -28,7 +28,6 @@ class Map:
         self.opaque = np.full((width, height), fill_value=False)
         self.visible = np.full((width, height), fill_value=False)
         self.explored = np.full((width, height), fill_value=False)
-        #self.explored = np.full((width, height), fill_value=True)
         self.rooms = []
 
     def render(self, blt):
@@ -116,8 +115,7 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.3, 0.1, 0.1, 0.1, 0.1, 0.3]
-        #dist = [0.4, 0, 0.2, 0, 0.4]
+        dist = [0.5, 0, 0, 0, 0, 0.5, 0]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -160,11 +158,15 @@ class Map:
         inventory = Inventory()
         equipment = Equipment(None, None, None)
         entity = Actor(name, x, y, props['char'], props['color'],
-                       props['blocking'], combat, ai, fov_radius,
-                       inventory, equipment)
+                       combat, ai, fov_radius, inventory, equipment)
         entity.ai.entity = entity
         entity.equipment.entity = entity
         entity.equipment.update_actor_stats()
+        return entity
+
+    def _spawn_consumable(self, name, props, x, y):
+        entity = Consumable(name, x, y, props['char'], props['color'],
+                            props['heal_amount'])
         return entity
 
     def _spawn_equippable(self, name, props, x, y):
@@ -179,6 +181,8 @@ class Map:
         ent_class, props = self._get_entity_properties(name)
         if ent_class == 'actor':
             entity = self._spawn_actor(name, props, x, y)
+        if ent_class == 'consumable':
+            entity = self._spawn_consumable(name, props, x, y)
         elif ent_class == 'equippable':
             entity = self._spawn_equippable(name, props, x, y)
         entities.add(entity)
@@ -210,8 +214,8 @@ class Map:
         inventory = Inventory()
         equipment = Equipment(None, None, None)
         player = Actor(name='player', x=startx, y=starty, char='@',
-                       color='amber', blocking=True, combat=combat, ai=ai,
-                       fov_radius=7, inventory=inventory, equipment=equipment)
+                       color='amber', combat=combat, ai=ai, fov_radius=7,
+                       inventory=inventory, equipment=equipment)
         player.ai.entity = player
         player.equipment.entity = player
         player.equipment.update_actor_stats()

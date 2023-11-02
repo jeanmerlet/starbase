@@ -1,4 +1,5 @@
 import numpy as np
+import helper_functions as hf
 
 
 class Combat:
@@ -21,7 +22,7 @@ class Attack:
     def __init__(self, name, damage, damage_type):
         self.base_name = name
         self.base_dice = damage
-        self.base_num_dice, self.base_damage = self._parse_damage(damage)
+        self.base_num_dice, self.base_damage = hf.parse_dice(damage)
         self.base_damage_type = damage_type
 
     def roll_hit(self):
@@ -32,19 +33,15 @@ class Attack:
         damage = np.sum(rolls)
         return damage
 
-    def _parse_damage(self, damage):
-        num_dice, max_damage = [int(x) for x in damage.split('d')]
-        return num_dice, max_damage
-
     def update(self, equipment_items):
         weapon = equipment_items['weapon']
         if weapon:
             self.name = weapon.name
-            self.num_dice, self.damage = self._parse_damage(weapon.damage)
+            self.num_dice, self.damage = hf.parse_dice(weapon.damage)
             self.damage_type = weapon.damage_type
         else:
             self.name = self.base_name
-            self.num_dice, self.damage = self._parse_damage(self.base_dice)
+            self.num_dice, self.damage = hf.parse_dice(self.base_dice)
             self.damage_type = self.base_damage_type
 
 
@@ -90,6 +87,10 @@ class Inventory:
         else:
             return True
 
+    def get_slot_from_item(self, item):
+        slots = self.items.keys()
+        return [slot for slot in slots if self.items[slot] == item][0]
+
 
 class Equipment:
     def __init__(self, weapon, armor, shields):
@@ -110,10 +111,12 @@ class Equipment:
 
     def equip_to_slot(self, slot, item):
         self.slots[slot] = item
+        item.equipped = True
         self.update_actor_stats()
 
-    def unequip_from_slot(self, slot):
+    def unequip_from_slot(self, slot, item):
         self.slots[slot] = None
+        item.equipped = False
         self.update_actor_stats()
 
 

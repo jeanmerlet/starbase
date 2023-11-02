@@ -219,15 +219,27 @@ class SelectAction(Action):
         raise NotImplementedError()
 
 
-class DropItem(SelectAction):
-    def __init__(self, selection):
-        super().__init__(selection)
-        self.time_units = 1000
-
+class SelectInventoryItem(SelectAction):
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
-        if item is None: return
-        if isinstance(item, Equippable) and item.equipped: return
+        if item is None or not self._is_valid_item(item, entity):
+            self.time_units = 0
+            return
+        else:
+            self.time_units = 1000
+            self._perform(engine, entity, item)
+
+
+class ConsumeItem(SelectInventoryItem):
+    def get_action(self):
+        pass
+
+
+class DropItem(SelectInventoryItem):
+    def _is_valid_item(self, item, entity):
+        return not (isinstance(item, Equippable) and item.equipped)
+
+    def _perform(self, engine, entity, item):
         entity.inventory.drop(item)
         item.x = entity.x
         item.y = entity.y
@@ -237,43 +249,43 @@ class DropItem(SelectAction):
         engine.event_handler.actions.append(CloseMenuAction())
 
 
-class EquipItem(SelectAction):
-    def __init__(self, selection):
-        super().__init__(selection)
-        self.time_units = 1000
+class EquipItem(SelectInventoryItem):
+    def _is_valid_item(self, item, entity):
+        return isinstance(item, Equippable) and not item.equipped
 
-    def perform(self, engine, entity):
-        item = entity.inventory.items[self.selection]
-        if item is None: return
-        if not isinstance(item, Equippable) or item.equipped: return
+    def _perform(self, engine, entity, item):
         slot = item.slot_type
         item_in_slot = entity.equipment.get_item_in_slot(slot)
         if item_in_slot:
-            UnequipItem(item_in_slot).perform(engine, entity)
+            selection = entity.inventory.get_slot_from_item(item_in_slot)
+            engine.event_handler.actions.append(UnequipItem(selection, False))
+            engine.event_handler.actions.append(EquipItem(self.selection))
+            self.time_units = 0
+            return
         entity.equipment.equip_to_slot(slot, item)
-        item.equipped = True
-        item.name = item.name + ' (equipped)'
         msg = f'You equip {item.name}.'
+        item.name += ' (equipped)'
         engine.gui.log.add_message(msg)
         engine.event_handler.actions.append(CloseMenuAction())
 
 
-class UnequipItem(SelectAction):
-    def __init__(self, selection):
+class UnequipItem(SelectInventoryItem):
+    def __init__(self, selection, close_menu=True):
         super().__init__(selection)
-        self.time_units = 1000
+        self.close_menu = close_menu
 
-    def perform(self, engine, entity):
-        item = entity.inventory.items[self.selection]
-        if item is None: return
-        if not isinstance(item, Equippable) or not item.equipped: return
+    def _is_valid_item(self, item, entity):
+        print(item.equipped)
+        return isinstance(item, Equippable) and item.equipped
+
+    def _perform(self, engine, entity, item):
         slot = item.slot_type
-        entity.equipment.unequip_from_slot(slot)
-        item.equipped = False
+        entity.equipment.unequip_from_slot(slot, item)
         item.name = item.name[:-11]
         msg = f'You unequip {item.name}.'
         engine.gui.log.add_message(msg)
-        engine.event_handler.actions.append(CloseMenuAction())
+        if self.close_menu:
+            engine.event_handler.actions.append(CloseMenuAction())
 
 
 class CloseMenuAction(Action):

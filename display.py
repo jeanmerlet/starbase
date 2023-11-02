@@ -87,8 +87,8 @@ class BarDisplay(Display):
         self.name = name
         self.value = value
         self.max_value = max_value
-        self.full_bar_tile = f'[color={lcolor}]\u2588[/color]'
-        self.empty_bar_tile = f'[color={dcolor}]\u2588[/color]'
+        self.full_bar_tile = f'[font=gui][color={lcolor}]\u2588[/color]'
+        self.empty_bar_tile = f'[font=gui][color={dcolor}]\u2588[/color]'
 
     def update(self, value, max_value):
         self.max_value = max_value
@@ -102,7 +102,7 @@ class BarDisplay(Display):
     def render(self):
         blt.clear_area(self.x, self.y, self.max_length, 2)
         if self.max_value > 0:
-            blt.print(self.x, self.y, f'[font=gui]{self.name}')
+            blt.print(self.x, self.y, f'[font=bold_gui]{self.name}')
             for i in range(self.max_length):
                 if i < self.length:
                     blt.print(self.x+i, self.y+1, self.full_bar_tile)

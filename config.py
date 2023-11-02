@@ -30,13 +30,12 @@ def set_blt_settings():
     blt.set(f'window.size={SCREEN_WIDTH}x{SCREEN_HEIGHT}')
     blt.set('window: cellsize=8x16')
 
-    #blt.set('font: ./fonts/chakra_petch/ChakraPetch-Regular.ttf, size=24, spacing=4x2')
-    #blt.set('gui font: ./fonts/chakra_petch/ChakraPetch-Regular.ttf, size=12')
-    blt.set('font: ./fonts/some_type_mono/SometypeMono-Regular.ttf, size=24, spacing=4x2')
-    blt.set('gui font: ./fonts/some_type_mono/SometypeMono-Regular.ttf, size=12')
+    font = 'Saira'
+    blt.set(f'font: ./fonts/{font}-Regular.ttf, size=24, spacing=4x2')
+    blt.set(f'gui font: ./fonts/{font}-Regular.ttf, size=12')
+    blt.set(f'bold_gui font: ./fonts/{font}-Bold.ttf, size=11')
 
     blt.set('0xE000: ./graphics/targetting.png, spacing=4x2')
-    #blt.set('0xE000: ./graphics/targetting.png')
 
     blt.set('palette.blue = 0,102,204')
     blt.set('palette.l_stl = 160,160,160')

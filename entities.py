@@ -1,3 +1,7 @@
+import helper_functions as hf
+import numpy as np
+
+
 class Entity:
     def __init__(self, name, x, y, char, color, blocking, render_order):
         self.name = name
@@ -15,9 +19,10 @@ class Entity:
         blt.print(self.x*4, self.y*2, self.icon)
 
 class Actor(Entity):
-    def __init__(self, name, x, y, char, color, blocking, combat, ai,
-                 fov_radius, inventory, equipment):
-        super().__init__(name, x, y, char, color, blocking, render_order=0)
+    def __init__(self, name, x, y, char, color, combat, ai, fov_radius,
+                 inventory, equipment):
+        super().__init__(name, x, y, char, color, blocking=True,
+                         render_order=0)
         self.combat = combat
         self.ai = ai
         self.fov_radius = fov_radius
@@ -42,34 +47,37 @@ class Actor(Entity):
 
 
 class Item(Entity):    
-    def __init__(self, name, x, y, char, color, blocking):
-        super().__init__(name, x, y, char, color, blocking, render_order=1)
+    def __init__(self, name, x, y, char, color):
+        super().__init__(name, x, y, char, color, blocking=False,
+                         render_order=1)
         self.ai = None
 
     def get_stats(self):
         return [f'This is a nice looking {self.name}']
 
 
-class Consumable:
-    def get_action(self, consumer):
-        return ItemAction(consumer, self.entity)
+class Consumable(Item):
+    def __init__(self, name, x, y, char, color, blocking):
+        super().__init__(name, x, y, char, color)
 
     def activate(self, action):
         raise NotImplementedError()
 
 
 class HealingConsumable(Consumable):
-    def __init__(self, amount):
-        self.amount = amount
+    def __init__(self, name, x, y, char, color, amount):
+        super().__init__(name, x, y, char, color)
+        self.rolls, self.max_amount = hf.parse_dice(amount)
 
-    def activate(self, action):
-        pass
+    def activate(self, target):
+        amount = np.sum(np.random.randint(1, self.max_amount + 1, self.rolls))
+        target.combat.hit_points.heal(amount)
 
 
 class Equippable(Item):
     def __init__(self, name, x, y, char, color, damage, damage_type,
                  shp_bonus, scr_bonus, scd_bonus, slot_type):
-        super().__init__(name, x, y, char, color, blocking=False)
+        super().__init__(name, x, y, char, color)
         self.damage = damage
         self.damage_type = damage_type
         self.shp_bonus = shp_bonus
