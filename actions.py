@@ -1,7 +1,7 @@
 import config
 from commands import *
 from display import MenuDisplay, Reticule
-from entities import Equippable
+from entities import Equippable, Consumable
 import event_handlers
 
 
@@ -231,8 +231,15 @@ class SelectInventoryItem(SelectAction):
 
 
 class ConsumeItem(SelectInventoryItem):
-    def get_action(self):
-        pass
+    def _is_valid_item(self, item, entity):
+        return isinstance(item, Consumable)
+
+    def _perform(self, engine, entity, item):
+        item.use()
+        msg = f"You use a {item.name}."
+        engine.gui.log.add_message(msg)
+        entity.inventory.items[self.selection] = None
+        engine.event_handler.actions.append(CloseMenuAction())
 
 
 class DropItem(SelectInventoryItem):
@@ -346,6 +353,18 @@ class OpenInventoryMenu(OpenMenuAction):
         title = self._get_title(inventory)
         menu_items = self._get_menu_items(inventory)
         self._create_menu(engine, w, h, dx, dy, title, menu_items)
+
+
+class ConsumeMenu(OpenInventoryMenu):
+    def __init__(self):
+        super().__init__()
+        self.event_handler = event_handlers.ConsumeMenuHandler()
+
+    def _get_title(self, inventory):
+        return 'Use which item?'
+
+    def _item_is_valid(self, item):
+        return isinstance(item, Consumable)
 
 
 class InventoryMenu(OpenInventoryMenu):

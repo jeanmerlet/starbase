@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
-from entities import Actor, Consumable, Equippable
+from entities import Actor, HealingConsumable, Equippable
 from components import *
 from ai import BaseAI, HostileEnemy
 from tiles import *
@@ -115,7 +115,7 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.5, 0, 0, 0, 0, 0.5, 0]
+        dist = [0.5, 0, 0, 0, 0, 0, 0.5]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -165,8 +165,10 @@ class Map:
         return entity
 
     def _spawn_consumable(self, name, props, x, y):
-        entity = Consumable(name, x, y, props['char'], props['color'],
-                            props['heal_amount'])
+        subclass = props['subclass']
+        if subclass == 'healing':
+            entity = HealingConsumable(name, x, y, props['char'],
+                                       props['color'], props['heal_amount'])
         return entity
 
     def _spawn_equippable(self, name, props, x, y):
@@ -217,6 +219,7 @@ class Map:
                        color='amber', combat=combat, ai=ai, fov_radius=7,
                        inventory=inventory, equipment=equipment)
         player.ai.entity = player
+        player.inventory.entity = player
         player.equipment.entity = player
         player.equipment.update_actor_stats()
         return player

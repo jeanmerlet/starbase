@@ -51,16 +51,17 @@ class Item(Entity):
         super().__init__(name, x, y, char, color, blocking=False,
                          render_order=1)
         self.ai = None
+        self.owner = None
 
     def get_stats(self):
         return [f'This is a nice looking {self.name}']
 
 
 class Consumable(Item):
-    def __init__(self, name, x, y, char, color, blocking):
+    def __init__(self, name, x, y, char, color):
         super().__init__(name, x, y, char, color)
 
-    def activate(self, action):
+    def use(self):
         raise NotImplementedError()
 
 
@@ -69,9 +70,9 @@ class HealingConsumable(Consumable):
         super().__init__(name, x, y, char, color)
         self.rolls, self.max_amount = hf.parse_dice(amount)
 
-    def activate(self, target):
+    def use(self):
         amount = np.sum(np.random.randint(1, self.max_amount + 1, self.rolls))
-        target.combat.hit_points.heal(amount)
+        self.owner.combat.hit_points.heal(amount)
 
 
 class Equippable(Item):

@@ -43,6 +43,8 @@ class MainEventHandler(EventHandler):
                 action = PickupAction()
             elif event == blt.TK_I:
                 action = InventoryMenu()
+            elif event == blt.TK_T:
+                action = ConsumeMenu()
             elif event == blt.TK_U:
                 action = UnequipMenu()
         elif event in QUIT_CMD:
@@ -65,6 +67,11 @@ class MenuEventHandler(EventHandler):
 class InspectItemHandler(MenuEventHandler):
     def _get_action(self, selection):
         return None
+
+
+class ConsumeMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return ConsumeItem(selection)
 
 
 class DropMenuHandler(MenuEventHandler):

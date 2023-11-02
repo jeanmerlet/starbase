@@ -23,7 +23,8 @@ MAIN_CMDS = {
     blt.TK_F,
     blt.TK_G,
     blt.TK_I,
-    blt.TK_U
+    blt.TK_U,
+    blt.TK_T
 }
 
 QUIT_CMD = {

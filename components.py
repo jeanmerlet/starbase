@@ -70,6 +70,7 @@ class Inventory:
 
     def pickup(self, item):
         self.items[self.next_slot] = item
+        item.owner = self.entity
         free_slots = [x for x in self.items.keys() if self.items[x] == None]
         free_slots.sort()
         self.next_slot = free_slots[0]
@@ -79,6 +80,7 @@ class Inventory:
             if value == item:
                 slot = key
         self.items[slot] = None
+        item.owner = None
         if ord(slot) < ord(self.next_slot): self.next_slot = slot
 
     def is_full(self):
