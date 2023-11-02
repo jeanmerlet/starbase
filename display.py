@@ -58,7 +58,7 @@ class BarDisplay(Display):
     def render(self):
         blt.clear_area(self.x, self.y, self.max_length, 2)
         if self.max_value > 0:
-            blt.print(self.x, self.y, self.name)
+            blt.print(self.x, self.y, f'[font=gui]{self.name}')
             for i in range(self.max_length):
                 if i < self.length:
                     blt.print(self.x+i, self.y+1, self.full_bar_tile)
@@ -105,7 +105,7 @@ class LogDisplay(Display):
             wrapped_msgs += self._wrap_msg(msg)
         wrapped_msgs = wrapped_msgs[-self.h:]
         for msg in wrapped_msgs:
-            blt.print(self.x, self.y, msg)
+            blt.print(self.x, self.y, f'[font=gui]{msg}')
             self.y += 1
 
 

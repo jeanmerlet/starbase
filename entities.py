@@ -9,7 +9,7 @@ class Entity:
         self.render_order = render_order
 
     def render(self, blt):
-        blt.print(self.x, self.y, self.icon)
+        blt.print(self.x*4, self.y*2, self.icon)
 
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, blocking, combat, ai,

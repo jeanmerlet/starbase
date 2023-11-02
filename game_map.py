@@ -36,9 +36,9 @@ class Map:
             for y in range(self.height):
                 if self.explored[x, y]:
                     if self.visible[x, y]:
-                        blt.print(x, y, self.tiles[x, y].light_icon)
+                        blt.print(x*4, y*2, self.tiles[x, y].light_icon)
                     else:
-                        blt.print(x, y, self.tiles[x, y].dark_icon)
+                        blt.print(x*4, y*2, self.tiles[x, y].dark_icon)
 
     def _get_start_xy(self):
         x = np.random.randint(self.width)
