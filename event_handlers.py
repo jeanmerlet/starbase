@@ -5,7 +5,7 @@ from actions import *
 
 class EventHandler:
     def __init__(self):
-        pass
+        self.timer = 0
 
     def handle_event(self, engine):
         player = engine.player
@@ -15,7 +15,10 @@ class EventHandler:
         self.actions = [action]
         for action in self.actions:
             action.perform(engine, player)
-        engine.handle_nonplayer_turns()
+            self.timer += action.time_units
+        if self.timer >= 1000:
+            engine.handle_nonplayer_turns()
+            self.timer -= 1000
 
     def _dispatch(self, event, engine):
         raise NotImplementedError()

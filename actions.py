@@ -7,7 +7,7 @@ import event_handlers
 
 class Action:
     def __init__(self):
-        pass
+        self.time_units = 1000
 
     def perform(self, engine, entity):
         raise NotImplementedError()
@@ -38,6 +38,10 @@ class DirectedAction(Action):
 
 
 class MoveAction(DirectedAction):
+    def __init__(self, dx, dy):
+        super().__init__(dx, dy)
+        self.time_units = 1000
+
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         blocking_ent = engine.get_blocking_entity_at_xy(dest_x, dest_y)
@@ -80,6 +84,7 @@ class AttackAction(Action):
 class MeleeAction(DirectedAction, AttackAction):
     def __init__(self, dx, dy):
         DirectedAction.__init__(self, dx, dy)
+        self.time_units = 1000
 
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
@@ -110,6 +115,9 @@ class MeleeAction(DirectedAction, AttackAction):
 
 
 class TargetAction(Action):
+    def __init__(self):
+        self.time_units = 0
+
     def perform(self, engine, entity):
         ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
         if not ents:
@@ -124,6 +132,9 @@ class TargetAction(Action):
 
 
 class NextTargetAction(Action):
+    def __init__(self):
+        self.time_units = 0
+
     def perform(self, engine, entity):
         ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
         ents = engine.get_dist_sorted_entities(ents)
@@ -132,15 +143,20 @@ class NextTargetAction(Action):
         engine.gui.target_display.target = target
 
 
-#TODO: cancelling does not give enemies a turn
-# (same with cancelling the inventory menu...)
 class CancelTargetAction(Action):
+    def __init__(self):
+        self.time_units = 0
+
     def perform(self, engine, entity):
         engine.gui.target_display.target = None
         engine.pop_event_handler()
 
 
 class CheckAction(DirectedAction):
+    def __init__(self, dx, dy):
+        super().__init__(dx, dy)
+        self.time_units = 0
+
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         if engine.get_blocking_entity_at_xy(dest_x, dest_y):
@@ -179,6 +195,10 @@ class SelectAction(Action):
 
 
 class DropItem(SelectAction):
+    def __init__(self, selection):
+        super().__init__(selection)
+        self.time_units = 1000
+
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
         if item is None: return
@@ -193,6 +213,10 @@ class DropItem(SelectAction):
 
 
 class EquipItem(SelectAction):
+    def __init__(self, selection):
+        super().__init__(selection)
+        self.time_units = 1000
+
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
         if item is None: return
@@ -210,6 +234,10 @@ class EquipItem(SelectAction):
 
 
 class UnequipItem(SelectAction):
+    def __init__(self, selection):
+        super().__init__(selection)
+        self.time_units = 1000
+
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
         if item is None: return
@@ -224,6 +252,9 @@ class UnequipItem(SelectAction):
 
 
 class CloseMenuAction(Action):
+    def __init__(self):
+        self.time_units = 0
+
     def perform(self, engine, entity):
         engine.gui.menus.pop()
         engine.pop_event_handler()
@@ -244,6 +275,7 @@ class InspectItem(SelectAction, OpenMenuAction):
     def __init__(self, selection):
         SelectAction.__init__(self, selection)
         self.event_handler = event_handlers.InspectItemHandler()
+        self.time_units = 0
 
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
@@ -257,6 +289,9 @@ class InspectItem(SelectAction, OpenMenuAction):
 
 
 class OpenInventoryMenu(OpenMenuAction):
+    def __init__(self):
+        self.time_units = 0
+
     def _get_menu_items(self, inventory):
         menu_items = []
         for slot, item in inventory.items.items():
@@ -278,6 +313,7 @@ class OpenInventoryMenu(OpenMenuAction):
 
 class InventoryMenu(OpenInventoryMenu):
     def __init__(self):
+        super().__init__()
         self.event_handler = event_handlers.InventoryMenuHandler()
 
     def _get_title(self, inventory):
@@ -291,6 +327,7 @@ class InventoryMenu(OpenInventoryMenu):
 
 class DropMenu(OpenInventoryMenu):
     def __init__(self):
+        super().__init__()
         self.event_handler = event_handlers.DropMenuHandler()
 
     def _get_title(self, inventory):
@@ -302,6 +339,7 @@ class DropMenu(OpenInventoryMenu):
 
 class EquipMenu(OpenInventoryMenu):
     def __init__(self):
+        super().__init__()
         self.event_handler = event_handlers.EquipMenuHandler()
 
     def _get_title(self, inventory):
@@ -313,6 +351,7 @@ class EquipMenu(OpenInventoryMenu):
 
 class UnequipMenu(OpenInventoryMenu):
     def __init__(self):
+        super().__init__()
         self.event_handler = event_handlers.UnequipMenuHandler()
 
     def _get_title(self, inventory):

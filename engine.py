@@ -21,8 +21,8 @@ class Engine:
         return sorted(entities, key=key)
 
     def handle_nonplayer_turns(self):
-        if not isinstance(self.event_handler, MainEventHandler):
-            return 
+        #if not isinstance(self.event_handler, MainEventHandler):
+        #    return 
         visible = self.game_map.visible
         tiles = self.game_map.tiles
         entities = self.entities - {self.player}

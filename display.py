@@ -62,7 +62,7 @@ class TargetDisplay(Display):
         target = self.target
         if target:
             target_text = f'[color={target.color}]{target.name}[/color]'
-            blt.print(self.x, self.y, target_text)
+            blt.print(self.x, self.y, f'[font=gui]{target_text}')
 
 
 class BarDisplay(Display):
@@ -160,11 +160,11 @@ class MenuDisplay(Display):
         blt.clear_area(self.x, self.y, self.w, self.h)
         self._render_border()
         self.y += 1
-        blt.print(self.x + 2, self.y, self.menu_title)
+        blt.print(self.x + 2, self.y, f'[font=gui]{self.menu_title}')
         self.y += 1
         menu_idx = list(map(chr, range(97, 123)))
         for item in self.menu_items:
-            blt.print(self.x + 2, self.y, item)
+            blt.print(self.x + 2, self.y, f'[font=gui]{item}')
             self.y += 1
 
 
