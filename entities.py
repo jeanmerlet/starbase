@@ -4,7 +4,10 @@ class Entity:
         self.x, self.y = x, y
         self.char = char
         self.color = color
-        self.icon = f'[color={color}]{char}'
+        if color:
+            self.icon = f'[color={color}]{char}'
+        else:
+            self.icon = f'{char}'
         self.blocking = blocking
         self.render_order = render_order
 

@@ -21,8 +21,6 @@ class Engine:
         return sorted(entities, key=key)
 
     def handle_nonplayer_turns(self):
-        #if not isinstance(self.event_handler, MainEventHandler):
-        #    return 
         visible = self.game_map.visible
         tiles = self.game_map.tiles
         entities = self.entities - {self.player}
@@ -58,6 +56,13 @@ class Engine:
         self.viewport.render(self.game_map, entities, self.player)
         self.gui.render()
         blt.refresh()
+
+    def get_entities_at_xy(self, x, y):
+        entities = []
+        for ent in self.entities:
+            if ent.x == x and ent.y == y:
+                entities.append(ent)
+        return entities
 
     def get_blocking_entity_at_xy(self, x, y):
         for ent in self.entities:

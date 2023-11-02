@@ -100,7 +100,7 @@ class TargettingEventHandler(EventHandler):
                 action = ConfirmTargetAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
-            action = MoveTargetAction(dx, dy)
+            action = MoveReticuleAction(dx, dy)
         return action
 
 

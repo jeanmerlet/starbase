@@ -10,6 +10,7 @@ class Viewport:
         self.w, self.h = w // 4, h // 2
         self.x_off = self.w // 2
         self.y_off = self.h // 2
+        self.reticule = None
 
     def render(self, game_map, entities, player):
         blt.clear_area(self.x, self.y, self.w*4, self.h*2)
@@ -23,12 +24,25 @@ class Viewport:
                         blt.print(i*4, j*2, game_map.tiles[x, y].light_icon)
                     else:
                         blt.print(i*4, j*2, game_map.tiles[x, y].dark_icon)
-
         for ent in entities:
             x = self.x_off - (px - ent.x)
             y = self.y_off - (py - ent.y)
             if game_map.visible[ent.x, ent.y]:
                 blt.print(x*4, y*2, ent.icon)
+        if self.reticule:
+            self.reticule.render(self.x_off, self.y_off, px, py)
+
+
+class Reticule:
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+
+    def render(self, x_off, y_off, px, py):
+        x = x_off - (px - self.x)
+        y = y_off - (py - self.y)
+        blt.composition(1)
+        blt.print(x*4, y*2, '[0xE000]')
+        blt.composition(0)
 
 
 class TargettingLine:

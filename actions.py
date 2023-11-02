@@ -1,6 +1,6 @@
 import config
 from commands import *
-from display import MenuDisplay
+from display import MenuDisplay, Reticule
 from entities import Equippable
 import event_handlers
 
@@ -128,6 +128,8 @@ class TargetAction(Action):
             target = ents[0]
             entity.target = target
             engine.gui.target_display.target = target
+            reticule = Reticule(target.x, target.y)
+            engine.viewport.reticule = reticule
             engine.push_event_handler(event_handlers.TargettingEventHandler())
 
 
@@ -141,6 +143,28 @@ class NextTargetAction(Action):
         target = ents[(ents.index(entity.target) + 1) % len(ents)]
         entity.target = target
         engine.gui.target_display.target = target
+        engine.viewport.reticule.x = target.x
+        engine.viewport.reticule.y = target.y
+
+
+class MoveReticuleAction(Action):
+    def __init__(self, dx, dy):
+        self.dx = dx
+        self.dy = dy
+        self.time_units = 0
+
+    def perform(self, engine, entity):
+        reticule = engine.viewport.reticule
+        reticule.x += self.dx
+        reticule.y += self.dy
+        entities = engine.get_entities_at_xy(reticule.x, reticule.y)
+        if entities:
+            target = entities[0]
+            entity.target = target
+            engine.gui.target_display.target = target
+        else:
+            entity.target = None
+            engine.gui.target_display.target = None
 
 
 class CancelTargetAction(Action):
@@ -150,6 +174,7 @@ class CancelTargetAction(Action):
     def perform(self, engine, entity):
         engine.gui.target_display.target = None
         engine.pop_event_handler()
+        engine.viewport.reticule = None
 
 
 class CheckAction(DirectedAction):
