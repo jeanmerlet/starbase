@@ -2,6 +2,7 @@ import config
 from commands import *
 from display import MenuDisplay, Reticule
 from entities import Equippable, Consumable
+from tiles import Door
 import event_handlers
 
 
@@ -45,17 +46,35 @@ class MoveAction(DirectedAction):
     def perform(self, engine, entity):
         dest_x, dest_y = self._get_target_xy(entity)
         blocking_ent = engine.get_blocking_entity_at_xy(dest_x, dest_y)
+        dest_tile = engine.game_map.tiles[dest_x, dest_y]
         if blocking_ent:
             msg = f'ERROR: {blocking_ent.name} blocking'
             engine.gui.log.add_message(msg)
         elif not engine.game_map.in_bounds(dest_x, dest_y):
             msg = 'ERROR: out of bounds!'
             engine.gui.log.add_message(msg)
-        elif not engine.game_map.tiles[dest_x, dest_y].walkable:
-            msg = "You can't go there."
-            engine.gui.log.add_message(msg)
+        elif not dest_tile.walkable:
+            if isinstance(dest_tile, Door):
+                action = OpenDoorAction(self.dx, self.dy)
+                engine.event_handler.actions.append(action)
+                self.time_units = 0
+                return
+            else:
+                msg = "You can't go there."
+                engine.gui.log.add_message(msg)
         else:
             entity.move(self.dx, self.dy)
+
+
+class OpenDoorAction(DirectedAction):
+    def __init__(self, dx, dy):
+        super().__init__(dx, dy)
+        self.time_units = 1000
+
+    def perform(self, engine, entity):
+        dest_x, dest_y = self._get_target_xy(entity)
+        door = engine.game_map.tiles[dest_x, dest_y]
+        door.ai.open(engine)
 
 
 class AttackAction(Action):
@@ -118,19 +137,34 @@ class TargetAction(Action):
     def __init__(self):
         self.time_units = 0
 
+    def _create_reticule(self, x, y, engine):
+        reticule = Reticule(x, y)
+        engine.viewport.reticule = reticule
+
     def perform(self, engine, entity):
-        ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
-        if not ents:
+        raise NotImplementedError()
+
+
+class RangedTargetAction(TargetAction):
+    def perform(self, engine, entity):
+        targets = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
+        if not targets:
             msg = 'Nothing to target.'
             engine.gui.log.add_message(msg)
         else:
-            ents = engine.get_dist_sorted_entities(ents)
-            target = ents[0]
+            targets = engine.get_dist_sorted_entities(targets)
+            target = targets[0]
             entity.target = target
-            engine.gui.target_display.target = target
-            reticule = Reticule(target.x, target.y)
-            engine.viewport.reticule = reticule
-            engine.push_event_handler(event_handlers.TargettingEventHandler())
+            self._create_reticule(x, y, engine)
+            engine.push_event_handler(event_handlers.TargetEventHandler())
+
+
+class InspectTargetAction(TargetAction):
+    def perform(self, engine, entity):
+        x, y = entity.x, entity.y
+        self._create_reticule(x, y, engine)
+        #engine.gui.target_display.target = target
+        engine.push_event_handler(event_handlers.InspectEventHandler())
 
 
 class NextTargetAction(Action):

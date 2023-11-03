@@ -1,5 +1,6 @@
 from event_handlers import *
-from entities import Item
+from entities import Item, Actor
+from tiles import AutoDoor
 
 
 class Engine:
@@ -38,6 +39,8 @@ class Engine:
         self.game_map.explored |= self.game_map.visible
 
     def _update(self):
+        for tile in self.game_map.tiles_with_ai:
+            tile.ai.update(self)
         self._update_fov()
         self.player.combat.tick()
         self.gui.update(self.player)
@@ -46,12 +49,6 @@ class Engine:
         return sorted(self.entities, key=lambda x: -x.render_order)
 
     def render(self):
-        #blt.clear_area(0, 0, config.MAP_WIDTH, config.MAP_HEIGHT)
-        #self.game_map.render(blt)
-        #for ent in self._get_render_sorted_entities():
-            #if self.game_map.visible[ent.x, ent.y]:
-            #if True:
-                #ent.render(blt)
         entities = self._get_render_sorted_entities()
         self.viewport.render(self.game_map, entities, self.player)
         self.gui.render()
@@ -84,6 +81,24 @@ class Engine:
                 if not (x == ent.x and y == ent.y) and ent.blocking:
                     ents.append(ent)
         return ents
+
+    def is_adjacent_live_actor(self, x, y):
+        coord_pairs = {(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2)}
+        actors = []
+        for ent in self.entities:
+            if (isinstance(ent, Actor) and ent.is_alive() and
+                (ent.x, ent.y) in coord_pairs):
+                return True
+        return False
+
+    def get_adjacent_autodoors(self, x, y):
+        coords = {(x+i, y+j) for i in range(-1, 2) for j in range(-1, 2)}
+        autodoors = []
+        for coord in coords - {x, y}:
+            tile = self.game_map.tiles[coord]
+            if isinstance(tile, AutoDoor):
+                autodoors.append(tile)
+        return autodoors
 
     def _update_event_handlers(self):
         self.event_handler = self.event_handlers[-1]

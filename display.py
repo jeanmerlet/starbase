@@ -11,8 +11,12 @@ class Viewport:
         self.x_off = self.w // 2
         self.y_off = self.h // 2
         self.reticule = None
+        self.dark_tile = '[color=shade]\u2592[\color]'
 
     def render(self, game_map, entities, player):
+        blt.layer(2)
+        blt.clear_area(self.x, self.y, self.w*4, self.h*2)
+        blt.layer(0)
         blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         px, py = player.x, player.y
         for i in range(1, self.w):
@@ -20,10 +24,13 @@ class Viewport:
                 x = px - self.x_off + i
                 y = py - self.y_off + j
                 if game_map.in_bounds(x, y) and game_map.explored[x, y]:
-                    if game_map.visible[x, y]:
-                        blt.print(i*4, j*2, game_map.tiles[x, y].light_icon)
-                    else:
-                        blt.print(i*4, j*2, game_map.tiles[x, y].dark_icon)
+                    blt.print(i*4, j*2, game_map.tiles[x, y].tile)
+                    if not game_map.visible[x, y]:
+                        blt.layer(2)
+                        blt.print(i*4, j*2, self.dark_tile)
+                        blt.layer(0)
+        blt.layer(1)
+        blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         for ent in entities:
             x = self.x_off - (px - ent.x)
             y = self.y_off - (py - ent.y)
@@ -31,6 +38,7 @@ class Viewport:
                 blt.print(x*4, y*2, ent.icon)
         if self.reticule:
             self.reticule.render(self.x_off, self.y_off, px, py)
+        blt.layer(0)
 
 
 class Reticule:

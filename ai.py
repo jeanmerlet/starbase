@@ -1,12 +1,42 @@
 from actions import MeleeAction, MoveAction, WaitAction
+import numpy as np
 
 
 class BaseAI:
     def get_action(self):
         NotImplementedError()
 
-    def get_path_to_target(self, dest_x, dest_y):
-        pass
+
+class DoorAI(BaseAI):
+    def __init__(self, x, y):
+        self.x, self.y = x, y
+        self.closed = True
+        self.close_delay = np.random.randint(1, 4)
+        self.turns_until_closed = 0
+
+    def update(self, engine):
+        if engine.is_adjacent_live_actor(self.x, self.y):
+            self.open(engine)
+        elif not self.closed:
+            if self.turns_until_closed > 0:
+                self.turns_until_closed -= 1
+            else:
+                entities = engine.get_entities_at_xy(self.x, self.y)
+                if not entities:
+                    self.close(engine)
+        
+    def open(self, engine):
+        self.closed = False
+        self.door.walkable = True
+        self.door.tile = self.door.open_tile
+        engine.game_map.opaque[self.x, self.y] = False
+        self.turns_until_closed = self.close_delay
+
+    def close(self, engine):
+        self.closed = True
+        self.door.walkable = False
+        self.door.tile = self.door.closed_tile
+        engine.game_map.opaque[self.x, self.y] = True
 
 
 class HostileEnemy(BaseAI):

@@ -3,16 +3,16 @@ import pandas as pd
 from procgen import Grid, RectRoom, Hallway
 from entities import Actor, HealingConsumable, Equippable
 from components import *
-from ai import BaseAI, HostileEnemy
+from ai import BaseAI, HostileEnemy, DoorAI
 from tiles import *
 
 
 class Map:
     TILE_ID = {
-        0: Wall(),
-        1: Floor(),
-        2: ClosedDoor(),
-        3: BrokenDoor()
+        0: Wall,
+        1: Floor,
+        2: AutoDoor,
+        3: AutoDoor
     }
     ENT_ID = {
         'actor': Actor,
@@ -28,16 +28,8 @@ class Map:
         self.opaque = np.full((width, height), fill_value=False)
         self.visible = np.full((width, height), fill_value=False)
         self.explored = np.full((width, height), fill_value=False)
+        self.tiles_with_ai = []
         self.rooms = []
-
-    def render(self, blt):
-        for x in range(self.width):
-            for y in range(self.height):
-                if self.explored[x, y]:
-                    if self.visible[x, y]:
-                        blt.print(x*4, y*2, self.tiles[x, y].light_icon)
-                    else:
-                        blt.print(x*4, y*2, self.tiles[x, y].dark_icon)
 
     def _get_start_xy(self):
         x = np.random.randint(self.width)
@@ -60,8 +52,15 @@ class Map:
     def _convert_grid_idx_to_tiles(self, x1, x2, y1, y2, grid_idx):
         for x in range(x1, x2):
             for y in range(y1, y2):
-                self.tiles[x, y] = self.TILE_ID[grid_idx[x - x1, y - y1]]
-                if self.tiles[x, y].opaque:
+                idx = grid_idx[x - x1, y - y1]
+                tile_class = self.TILE_ID[idx]
+                tile = tile_class()
+                if isinstance(tile, AutoDoor):
+                    tile.ai = DoorAI(x, y)
+                    tile.ai.door = tile
+                    self.tiles_with_ai.append(tile)
+                self.tiles[x, y] = tile
+                if tile.opaque:
                     self.opaque[x, y] = True
 
     def _add_map_edge(self):
@@ -115,7 +114,7 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.5, 0, 0, 0, 0, 0, 0.5]
+        dist = [0.35, 0.15, 0, 0.1, 0.2, 0, 0.2]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set

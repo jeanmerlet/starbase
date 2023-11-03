@@ -38,7 +38,7 @@ class MainEventHandler(EventHandler):
             elif event == blt.TK_E:
                 action = EquipMenu()
             elif event == blt.TK_F:
-                action = TargetAction()
+                action = RangedTargetAction()
             elif event == blt.TK_G:
                 action = PickupAction()
             elif event == blt.TK_I:
@@ -47,6 +47,8 @@ class MainEventHandler(EventHandler):
                 action = ConsumeMenu()
             elif event == blt.TK_U:
                 action = UnequipMenu()
+            elif event == blt.TK_X:
+                action = InspectTargetAction()
         elif event in QUIT_CMD:
             action = QuitAction()
         return action
@@ -94,7 +96,7 @@ class UnequipMenuHandler(MenuEventHandler):
         return UnequipItem(selection)
 
 
-class TargettingEventHandler(EventHandler):
+class TargetEventHandler(EventHandler):
     def _dispatch(self, event, engine):
         action = None
         if event in CANCEL_CMD:
@@ -104,6 +106,22 @@ class TargettingEventHandler(EventHandler):
                 action = NextTargetAction()
             elif (event == blt.TK_F or event == blt.TK_ENTER or
                  event == blt.TK_KP_ENTER):
+                action = RangedAttackAction()
+        elif event in MOVE_CMDS:
+            dx, dy = MOVE_CMDS[event]
+            action = MoveReticuleAction(dx, dy)
+        return action
+
+
+class InspectEventHandler(EventHandler):
+    def _dispatch(self, event, engine):
+        action = None
+        if event in CANCEL_CMD:
+            action = CancelTargetAction()
+        elif event in TARGET_CMDS:
+            if event == blt.TK_TAB:
+                action = NextTargetAction()
+            elif event == blt.TK_ENTER or event == blt.TK_KP_ENTER:
                 action = ConfirmTargetAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
