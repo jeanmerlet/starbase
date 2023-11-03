@@ -14,10 +14,6 @@ class Map:
         2: AutoDoor,
         3: AutoDoor
     }
-    ENT_ID = {
-        'actor': Actor,
-        'equippable': Equippable
-    }
     ENT_DATA = pd.read_csv('./data/entities.tsv', sep='\t', index_col=0,
                            header=0)
 
@@ -157,7 +153,8 @@ class Map:
         inventory = Inventory()
         equipment = Equipment(None, None, None)
         entity = Actor(name, x, y, props['char'], props['color'],
-                       combat, ai, fov_radius, inventory, equipment)
+                       props['graphic'], combat, ai, fov_radius, inventory,
+                       equipment)
         entity.ai.entity = entity
         entity.equipment.entity = entity
         entity.equipment.update_actor_stats()
@@ -167,14 +164,16 @@ class Map:
         subclass = props['subclass']
         if subclass == 'healing':
             entity = HealingConsumable(name, x, y, props['char'],
-                                       props['color'], props['heal_amount'])
+                                       props['color'], props['graphic'],
+                                       props['heal_amount'])
         return entity
 
     def _spawn_equippable(self, name, props, x, y):
         entity = Equippable(name, x, y, props['char'], props['color'],
-                            props['damage'], props['dam_type'],
-                            props['shp_bonus'], props['scr_bonus'],
-                            props['scd_bonus'], props['slot_type'])
+                            props['graphic'], props['damage'],
+                            props['dam_type'], props['shp_bonus'],
+                            props['scr_bonus'], props['scd_bonus'],
+                            props['slot_type'])
         return entity
 
     def _spawn_entity(self, entities, room, name):
@@ -215,8 +214,8 @@ class Map:
         inventory = Inventory()
         equipment = Equipment(None, None, None)
         player = Actor(name='player', x=startx, y=starty, char='@',
-                       color='amber', combat=combat, ai=ai, fov_radius=7,
-                       inventory=inventory, equipment=equipment)
+                       color='amber', graphic=None, combat=combat, ai=ai,
+                       fov_radius=7, inventory=inventory, equipment=equipment)
         player.ai.entity = player
         player.inventory.entity = player
         player.equipment.entity = player
