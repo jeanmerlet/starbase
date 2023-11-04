@@ -84,7 +84,8 @@ class TargetDisplay(Display):
         blt.clear_area(self.x, self.y, 20, 1)
         target = self.target
         if target:
-            target_text = f'[color={target.color}]{target.name}[/color]'
+            name = target.name.capitalize()
+            target_text = f'[color={target.color}]{name}[/color]'
             blt.print(self.x, self.y, f'[font=gui]{target_text}')
 
 

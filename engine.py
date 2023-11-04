@@ -58,7 +58,10 @@ class Engine:
         entities = []
         for ent in self.entities:
             if ent.x == x and ent.y == y:
-                if visible and self.game_map.visible[x, y]:
+                if visible:
+                    if self.game_map.visible[x, y]:
+                        entities.append(ent)
+                else:
                     entities.append(ent)
         return entities
 

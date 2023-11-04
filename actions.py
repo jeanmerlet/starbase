@@ -159,6 +159,7 @@ class ReticuleAction(Action):
         raise NotImplementedError()
 
 
+#TODO: different reticule color when inspecting (blue) vs. targetting (red)
 class MoveReticuleAction(ReticuleAction):
     def __init__(self, dx, dy):
         super().__init__()
