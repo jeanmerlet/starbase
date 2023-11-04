@@ -49,6 +49,8 @@ class MainEventHandler(EventHandler):
                 action = UnequipMenu()
             elif event == blt.TK_X:
                 action = MoveReticuleAction(0, 0)
+            elif event == blt.TK_GRAVE:
+                action = FPSToggle()
         elif event in QUIT_CMD:
             action = QuitAction()
         return action

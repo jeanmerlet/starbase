@@ -1,5 +1,5 @@
 from bearlibterminal import terminal as blt
-# /home/jeanmerlet/miniconda3/envs/dungeon/lib/python3.11/site-packages/bearlibterminal
+# /home/jeanmerlet/miniconda3/envs/dungeon/lib/python3.11/site-packages/bearlibterminal/terminal.py
 from event_handlers import MainEventHandler
 from game_map import Map
 from fov import FieldOfView

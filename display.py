@@ -225,7 +225,7 @@ class GUI:
         if self.show_fps:
             blt.clear_area(1, 1, 8, 1)
             fps = 1 // (time.time() - self.last_time)
-            blt.print(1, 1, f'fps: {fps}')
+            blt.print(1, 1, f'[font=gui]fps: {fps}')
             self.last_time = time.time()
 
     def update(self, player):

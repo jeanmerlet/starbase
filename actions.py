@@ -15,6 +15,14 @@ class Action:
         raise NotImplementedError()
 
 
+class FPSToggle(Action):
+    def __init__(self):
+        self.time_units = 0
+
+    def perform(self, engine, entity):
+        engine.gui.show_fps = False if engine.gui.show_fps else True
+
+
 class QuitAction(Action):
     def perform(self, engine, entity):
         raise SystemExit()
