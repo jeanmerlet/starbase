@@ -38,7 +38,7 @@ class MainEventHandler(EventHandler):
             elif event == blt.TK_E:
                 action = EquipMenu()
             elif event == blt.TK_F:
-                action = RangedTargetAction()
+                action = NextTargetAction()
             elif event == blt.TK_G:
                 action = PickupAction()
             elif event == blt.TK_I:
@@ -48,7 +48,7 @@ class MainEventHandler(EventHandler):
             elif event == blt.TK_U:
                 action = UnequipMenu()
             elif event == blt.TK_X:
-                action = InspectTargetAction()
+                action = MoveReticuleAction(0, 0)
         elif event in QUIT_CMD:
             action = QuitAction()
         return action

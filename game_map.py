@@ -111,6 +111,7 @@ class Map:
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
         dist = [0.35, 0.15, 0, 0.1, 0.2, 0, 0.2]
+        #dist = [0, 0, 0, 0, 1, 0, 0]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set

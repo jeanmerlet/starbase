@@ -1,9 +1,10 @@
 import config
 from commands import *
 from display import MenuDisplay, Reticule
-from entities import Equippable, Consumable
+from entities import Actor, Equippable, Consumable
+from ai import HostileEnemy
 from tiles import Door
-import event_handlers
+import event_handlers as eh
 
 
 class Action:
@@ -84,7 +85,7 @@ class AttackAction(Action):
     def _check_for_death(self, engine, target):
         if not target.is_alive():
             if target is engine.player:
-                engine.push_event_handler(event_handlers.GameOverEventHandler())
+                engine.push_event_handler(eh.GameOverEventHandler())
                 msg = 'You have DIED.'
                 engine.gui.log.add_message(msg)
             else:
@@ -133,7 +134,7 @@ class MeleeAction(DirectedAction, AttackAction):
                 self._check_for_death(engine, target)
 
 
-class TargetAction(Action):
+class ReticuleAction(Action):
     def __init__(self):
         self.time_units = 0
 
@@ -145,60 +146,70 @@ class TargetAction(Action):
         raise NotImplementedError()
 
 
-class RangedTargetAction(TargetAction):
-    def perform(self, engine, entity):
-        targets = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
-        if not targets:
-            msg = 'Nothing to target.'
-            engine.gui.log.add_message(msg)
-        else:
-            targets = engine.get_dist_sorted_entities(targets)
-            target = targets[0]
-            entity.target = target
-            self._create_reticule(x, y, engine)
-            engine.push_event_handler(event_handlers.TargetEventHandler())
-
-
-class InspectTargetAction(TargetAction):
-    def perform(self, engine, entity):
-        x, y = entity.x, entity.y
-        self._create_reticule(x, y, engine)
-        #engine.gui.target_display.target = target
-        engine.push_event_handler(event_handlers.InspectEventHandler())
-
-
-class NextTargetAction(Action):
-    def __init__(self):
-        self.time_units = 0
-
-    def perform(self, engine, entity):
-        ents = engine.get_blocking_ents_visible_from_xy(entity.x, entity.y)
-        ents = engine.get_dist_sorted_entities(ents)
-        target = ents[(ents.index(entity.target) + 1) % len(ents)]
-        entity.target = target
-        engine.gui.target_display.target = target
-        engine.viewport.reticule.x = target.x
-        engine.viewport.reticule.y = target.y
-
-
-class MoveReticuleAction(Action):
+class MoveReticuleAction(ReticuleAction):
     def __init__(self, dx, dy):
+        super().__init__()
         self.dx = dx
         self.dy = dy
-        self.time_units = 0
 
     def perform(self, engine, entity):
+        if not engine.viewport.reticule:
+            x, y = entity.x, entity.y
+            self._create_reticule(x, y, engine)
+            engine.event_handler.actions.append(MoveReticuleAction(0, 0))
+            engine.push_event_handler(eh.InspectEventHandler())
+            return
         reticule = engine.viewport.reticule
         reticule.x += self.dx
         reticule.y += self.dy
-        entities = engine.get_entities_at_xy(reticule.x, reticule.y)
+        entities = engine.get_entities_at_xy(reticule.x, reticule.y,
+                                             visible=True)
+        entities = engine._get_render_sorted_entities(entities)
         if entities:
             target = entities[0]
-            entity.target = target
             engine.gui.target_display.target = target
+            if (isinstance(engine.event_handler, eh.TargetEventHandler) and
+                (isinstance(target, Actor) and target.ai and
+                 isinstance(target.ai, HostileEnemy))):
+                entity.target = target
         else:
             entity.target = None
             engine.gui.target_display.target = None
+
+
+class NextTargetAction(ReticuleAction):
+    def perform(self, engine, entity):
+        tgts = engine.get_hostile_ents_visible_from_xy(entity.x, entity.y)
+        tgts = engine.get_dist_sorted_entities(tgts)
+        if not tgts:
+            msg = 'Nothing to target.'
+            engine.gui.log.add_message(msg)
+        else:
+            if entity.target:
+                target = tgts[(tgts.index(entity.target) + 1) % len(tgts)]
+            else:
+                target = tgts[0]
+            entity.target = target
+            engine.gui.target_display.target = target
+            if engine.viewport.reticule:
+                engine.viewport.reticule.x = target.x
+                engine.viewport.reticule.y = target.y
+            else:
+                self._create_reticule(target.x, target.y, engine)
+                engine.push_event_handler(eh.TargetEventHandler())
+
+
+class InspectTargetAction(ReticuleAction):
+    def perform(self, engine, entity):
+        x, y = entity.x, entity.y
+        self._create_reticule(x, y, engine)
+        engine.event_handler.actions.append(MoveReticuleAction(0, 0))
+        engine.push_event_handler(eh.InspectEventHandler())
+
+
+class ConfirmTargetAction(ReticuleAction):
+    def perform(self, engine, entity):
+        pass
 
 
 class CancelTargetAction(Action):
@@ -206,9 +217,10 @@ class CancelTargetAction(Action):
         self.time_units = 0
 
     def perform(self, engine, entity):
+        entity.target = None
         engine.gui.target_display.target = None
-        engine.pop_event_handler()
         engine.viewport.reticule = None
+        engine.pop_event_handler()
 
 
 class CheckAction(DirectedAction):
@@ -352,7 +364,7 @@ class OpenMenuAction(Action):
 class InspectItem(SelectAction, OpenMenuAction):
     def __init__(self, selection):
         SelectAction.__init__(self, selection)
-        self.event_handler = event_handlers.InspectItemHandler()
+        self.event_handler = eh.InspectItemHandler()
         self.time_units = 0
 
     def perform(self, engine, entity):
@@ -392,7 +404,7 @@ class OpenInventoryMenu(OpenMenuAction):
 class ConsumeMenu(OpenInventoryMenu):
     def __init__(self):
         super().__init__()
-        self.event_handler = event_handlers.ConsumeMenuHandler()
+        self.event_handler = eh.ConsumeMenuHandler()
 
     def _get_title(self, inventory):
         return 'Use which item?'
@@ -404,7 +416,7 @@ class ConsumeMenu(OpenInventoryMenu):
 class InventoryMenu(OpenInventoryMenu):
     def __init__(self):
         super().__init__()
-        self.event_handler = event_handlers.InventoryMenuHandler()
+        self.event_handler = eh.InventoryMenuHandler()
 
     def _get_title(self, inventory):
         inv_size = inventory.size
@@ -418,7 +430,7 @@ class InventoryMenu(OpenInventoryMenu):
 class DropMenu(OpenInventoryMenu):
     def __init__(self):
         super().__init__()
-        self.event_handler = event_handlers.DropMenuHandler()
+        self.event_handler = eh.DropMenuHandler()
 
     def _get_title(self, inventory):
         return 'Drop which item?'
@@ -430,7 +442,7 @@ class DropMenu(OpenInventoryMenu):
 class EquipMenu(OpenInventoryMenu):
     def __init__(self):
         super().__init__()
-        self.event_handler = event_handlers.EquipMenuHandler()
+        self.event_handler = eh.EquipMenuHandler()
 
     def _get_title(self, inventory):
         return 'Equip which item?'
@@ -442,7 +454,7 @@ class EquipMenu(OpenInventoryMenu):
 class UnequipMenu(OpenInventoryMenu):
     def __init__(self):
         super().__init__()
-        self.event_handler = event_handlers.UnequipMenuHandler()
+        self.event_handler = eh.UnequipMenuHandler()
 
     def _get_title(self, inventory):
         return 'Unequip which item?'

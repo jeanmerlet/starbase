@@ -15,6 +15,7 @@ class Entity:
             self.icon = graphic
         self.blocking = blocking
         self.render_order = render_order
+        self.target = None
 
     def render(self, blt):
         blt.print(self.x*4, self.y*2, self.icon)

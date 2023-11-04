@@ -45,20 +45,21 @@ class Engine:
         self.player.combat.tick()
         self.gui.update(self.player)
 
-    def _get_render_sorted_entities(self):
-        return sorted(self.entities, key=lambda x: -x.render_order)
+    def _get_render_sorted_entities(self, entities):
+        return sorted(entities, key=lambda x: -x.render_order)
 
     def render(self):
-        entities = self._get_render_sorted_entities()
+        entities = self._get_render_sorted_entities(self.entities)
         self.viewport.render(self.game_map, entities, self.player)
         self.gui.render()
         blt.refresh()
 
-    def get_entities_at_xy(self, x, y):
+    def get_entities_at_xy(self, x, y, visible=False):
         entities = []
         for ent in self.entities:
             if ent.x == x and ent.y == y:
-                entities.append(ent)
+                if visible and self.game_map.visible[x, y]:
+                    entities.append(ent)
         return entities
 
     def get_blocking_entity_at_xy(self, x, y):
@@ -74,11 +75,12 @@ class Engine:
                 items.append(ent)
         return items
 
-    def get_blocking_ents_visible_from_xy(self, x, y):
+    def get_hostile_ents_visible_from_xy(self, x, y):
         ents = []
         for ent in self.entities:
             if self.game_map.visible[ent.x, ent.y]:
-                if not (x == ent.x and y == ent.y) and ent.blocking:
+                if (isinstance(ent, Actor) and ent.ai and
+                    isinstance(ent.ai, HostileEnemy)):
                     ents.append(ent)
         return ents
 

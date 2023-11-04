@@ -4,6 +4,7 @@ import config
 import time
 
 
+#TODO: doors as entities with transparency over floor tile when open
 class Viewport:
     def __init__(self, x, y, w, h):
         self.x, self.y = x, y
@@ -168,18 +169,23 @@ class MenuDisplay(Display):
         self.w, self.h = w, h
         self.menu_title = menu_title
         self.menu_items = menu_items
-        self.border_tile = '[color=menu_border]\u2592[/color]'
+        self.border_tile = '[font=gui][color=menu_border]\u2588[/color]'
 
     def _render_border(self):
-        blt.print(self.x, self.y, self.border_tile * self.w)
+        blt.print(self.x, self.y, self.border_tile * (self.w + 1))
         for y in range(self.h - 2):
-            blt.print(self.x, self.y + y + 1, self.border_tile)
-            blt.print(self.x + self.w - 1, self.y + y + 1, self.border_tile)
-        blt.print(self.x, self.y + self.h - 1, self.border_tile * self.w)
+            blt.print(self.x, self.y + y + 1, self.border_tile * 2)
+            blt.print(self.x + self.w - 1, self.y + y + 1, self.border_tile * 2)
+        blt.print(self.x, self.y + self.h - 1, self.border_tile * (self.w + 1))
 
     def render(self):
         self.y = self.orig_y
-        blt.clear_area(self.x, self.y, self.w, self.h)
+        blt.clear_area(self.x - 1, self.y, self.w, self.h)
+        blt.layer(1)
+        blt.clear_area(self.x - 1, self.y, self.w, self.h)
+        blt.layer(2)
+        blt.clear_area(self.x - 1, self.y, self.w, self.h)
+        blt.layer(0)
         self._render_border()
         self.y += 1
         blt.print(self.x + 2, self.y, f'[font=gui]{self.menu_title}')

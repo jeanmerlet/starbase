@@ -1,4 +1,4 @@
-from actions import MeleeAction, MoveAction, WaitAction
+import actions
 import numpy as np
 
 
@@ -47,17 +47,17 @@ class HostileEnemy(BaseAI):
     def get_action(self, engine, target, visible, tiles):
         if not visible[self.entity.x, self.entity.y]:
             if not self.path:
-                return WaitAction()
+                return actions.WaitAction()
             elif self.turns_since_player_seen > 0:
                 self.turns_since_player_seen -= 1
                 targetx, targety = self.path.pop(0)
                 dx = targetx - self.entity.x
                 dy = targety - self.entity.y
-                return MoveAction(dx, dy)
+                return actions.MoveAction(dx, dy)
         elif target:
             return self._move_towards(engine, target, tiles)
         else:
-            return WaitAction()
+            return actions.WaitAction()
 
     def _move_towards(self, engine, target, tiles):
         dx = target.x - self.entity.x
@@ -70,17 +70,17 @@ class HostileEnemy(BaseAI):
             dest_x, dest_y = self.entity.x + dx, self.entity.y + dy
             if (tiles[dest_x, dest_y].walkable and not
                 engine.get_blocking_entity_at_xy(dest_x, dest_y)):
-                return MoveAction(dx, dy)
+                return actions.MoveAction(dx, dy)
             elif (tiles[dest_x, self.entity.y].walkable and not
                 engine.get_blocking_entity_at_xy(dest_x, self.entity.y)):
-                return MoveAction(dx, 0)
+                return actions.MoveAction(dx, 0)
             elif (tiles[self.entity.x, dest_y].walkable and not
                 engine.get_blocking_entity_at_xy(self.entity.x, dest_y)):
-                return MoveAction(0, dy)
+                return actions.MoveAction(0, dy)
             else:
-                return WaitAction()
+                return actions.WaitAction()
         else:
             return self._melee_attack(dx, dy)
 
     def _melee_attack(self, dx, dy):
-        return MeleeAction(dx, dy)
+        return actions.MeleeAction(dx, dy)
