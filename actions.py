@@ -134,6 +134,19 @@ class MeleeAction(DirectedAction, AttackAction):
                 self._check_for_death(engine, target)
 
 
+class CheckAction(DirectedAction):
+    def __init__(self, dx, dy):
+        super().__init__(dx, dy)
+        self.time_units = 0
+
+    def perform(self, engine, entity):
+        dest_x, dest_y = self._get_target_xy(entity)
+        if engine.get_blocking_entity_at_xy(dest_x, dest_y):
+            engine.event_handler.actions.append(MeleeAction(self.dx, self.dy))
+        else:
+            engine.event_handler.actions.append(MoveAction(self.dx, self.dy))
+
+
 class ReticuleAction(Action):
     def __init__(self):
         self.time_units = 0
@@ -199,17 +212,11 @@ class NextTargetAction(ReticuleAction):
                 engine.push_event_handler(eh.TargetEventHandler())
 
 
-class InspectTargetAction(ReticuleAction):
+class InspectUnderReticuleAction(ReticuleAction):
     def perform(self, engine, entity):
-        x, y = entity.x, entity.y
-        self._create_reticule(x, y, engine)
-        engine.event_handler.actions.append(MoveReticuleAction(0, 0))
-        engine.push_event_handler(eh.InspectEventHandler())
-
-
-class ConfirmTargetAction(ReticuleAction):
-    def perform(self, engine, entity):
-        pass
+        target = engine.gui.target_display.target
+        if target:
+            engine.event_handler.actions.append(InspectEntity(target))
 
 
 class CancelTargetAction(Action):
@@ -221,19 +228,6 @@ class CancelTargetAction(Action):
         engine.gui.target_display.target = None
         engine.viewport.reticule = None
         engine.pop_event_handler()
-
-
-class CheckAction(DirectedAction):
-    def __init__(self, dx, dy):
-        super().__init__(dx, dy)
-        self.time_units = 0
-
-    def perform(self, engine, entity):
-        dest_x, dest_y = self._get_target_xy(entity)
-        if engine.get_blocking_entity_at_xy(dest_x, dest_y):
-            engine.event_handler.actions.append(MeleeAction(self.dx, self.dy))
-        else:
-            engine.event_handler.actions.append(MoveAction(self.dx, self.dy))
 
 
 class PickupAction(Action):
@@ -351,6 +345,9 @@ class CloseMenuAction(Action):
 
 
 class OpenMenuAction(Action):
+    def __init__(self):
+        self.time_units = 0
+
     def _create_menu(self, engine, w, h, dx, dy, title, menu_items):
         x = (config.SCREEN_WIDTH - w) // 2 + dx
         y = (config.SCREEN_HEIGHT - h) // 2 + dy
@@ -361,26 +358,38 @@ class OpenMenuAction(Action):
         raise NotImplementedError()
 
 
-class InspectItem(SelectAction, OpenMenuAction):
+class InspectEntity(OpenMenuAction):
+    def __init__(self, entity):
+        super().__init__()
+        self.event_handler = eh.InspectEntityHandler()
+        self.entity = entity
+
+    def perform(self, engine, entity):
+        w = config.INVENTORY_WIDTH
+        h = config.INVENTORY_HEIGHT
+        dx, dy = 2, 2
+        color, name = self.entity.color, self.entity.name.capitalize()
+        title = f'[color={color}]{name}[/color]'
+        menu_items = self.entity.get_stats()
+        self._create_menu(engine, w, h, dx, dy, title, menu_items)
+
+
+class InspectItem(SelectAction):
     def __init__(self, selection):
-        SelectAction.__init__(self, selection)
-        self.event_handler = eh.InspectItemHandler()
+        super().__init__(selection)
         self.time_units = 0
 
     def perform(self, engine, entity):
         item = entity.inventory.items[self.selection]
-        if item is None: return
-        w = config.INVENTORY_WIDTH
-        h = config.INVENTORY_HEIGHT
-        dx, dy = 2, 2
-        title = f'{item.name.capitalize()}'
-        menu_items = item.get_stats()
-        self._create_menu(engine, w, h, dx, dy, title, menu_items)
+        if item is None:
+            return
+        else:
+            engine.event_handler.actions.append(InspectEntity(item))
 
 
 class OpenInventoryMenu(OpenMenuAction):
     def __init__(self):
-        self.time_units = 0
+        super().__init__()
 
     def _get_menu_items(self, inventory):
         menu_items = []

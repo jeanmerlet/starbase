@@ -66,7 +66,7 @@ class MenuEventHandler(EventHandler):
         return action
 
 
-class InspectItemHandler(MenuEventHandler):
+class InspectEntityHandler(MenuEventHandler):
     def _get_action(self, selection):
         return None
 
@@ -122,7 +122,7 @@ class InspectEventHandler(EventHandler):
             if event == blt.TK_TAB:
                 action = NextTargetAction()
             elif event == blt.TK_ENTER or event == blt.TK_KP_ENTER:
-                action = ConfirmTargetAction()
+                action = InspectUnderReticuleAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
             action = MoveReticuleAction(dx, dy)

@@ -20,6 +20,9 @@ class Entity:
     def render(self, blt):
         blt.print(self.x*4, self.y*2, self.icon)
 
+    def get_stats(self):
+        return [f'This is a nice looking {self.name}']
+
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, graphic, combat, ai,
                  fov_radius, inventory, equipment):
@@ -54,9 +57,6 @@ class Item(Entity):
                          render_order=1)
         self.ai = None
         self.owner = None
-
-    def get_stats(self):
-        return [f'This is a nice looking {self.name}']
 
 
 class Consumable(Item):
