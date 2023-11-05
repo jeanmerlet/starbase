@@ -3,15 +3,36 @@ import helper_functions as hf
 
 
 class Combat:
-    def __init__(self, hit_points, shields, attacks):
+    def __init__(self, hit_points, shields, melee_attacks, ranged_attacks):
         self.hit_points = hit_points
         self.shields = shields
-        self.attacks = attacks
+        self.base_melee_attacks = melee_attacks
+        self.base_ranged_attacks = ranged_attacks
+
+    def _update_weapon_attacks(self, equipment_items):
+        weapon = equipment_items['weapon']
+        if weapon is None:
+            self.melee_attacks = self.base_melee_attacks
+            self.ranged_attacks = self.base_ranged_attacks
+            return
+        name = weapon.name
+        damage = weapon.damage
+        damage_type = weapon.damage_type
+        #range = weapon.range
+        if weapon.att_type == 'melee':
+            self.melee_attacks = [Attack(name, damage, damage_type)]
+            for i, attack in enumerate(self.melee_attacks):
+                attack.update(i, equipment_items)
+            self.ranged_attacks = self.base_ranged_attacks
+        else:
+            self.ranged_attacks = [Attack(name, damage, damage_type)]
+            for i, attack in enumerate(self.ranged_attacks):
+                attack.update(i, equipment_items)
+            self.melee_attacks = self.base_melee_attacks
 
     def update_equipment(self, equipment_items):
         self.shields.update(equipment_items)
-        for attack in self.attacks:
-            attack.update(equipment_items)
+        self._update_weapon_attacks(equipment_items)
 
     def tick(self):
         self.shields.charge()
@@ -20,10 +41,10 @@ class Combat:
 
 class Attack:
     def __init__(self, name, damage, damage_type):
-        self.base_name = name
-        self.base_dice = damage
-        self.base_num_dice, self.base_damage = hf.parse_dice(damage)
-        self.base_damage_type = damage_type
+        self.name = name
+        self.dice = damage
+        self.num_dice, self.damage = hf.parse_dice(damage)
+        self.damage_type = damage_type
 
     def roll_hit(self):
         pass
@@ -33,16 +54,8 @@ class Attack:
         damage = np.sum(rolls)
         return damage
 
-    def update(self, equipment_items):
-        weapon = equipment_items['weapon']
-        if weapon:
-            self.name = weapon.name
-            self.num_dice, self.damage = hf.parse_dice(weapon.damage)
-            self.damage_type = weapon.damage_type
-        else:
-            self.name = self.base_name
-            self.num_dice, self.damage = hf.parse_dice(self.base_dice)
-            self.damage_type = self.base_damage_type
+    def update(self, attack_num, equipment_items):
+        pass
 
 
 class HitPoints:
@@ -146,7 +159,6 @@ class Shields:
         else:
             self.time_until_charge -= 1
 
-    #TODO: fix the shield hp 0 logic
     def update(self, equipment_items):
         shp_bonus, scr_bonus, scd_bonus = 0, 0, 0
         for slot, item in equipment_items.items():

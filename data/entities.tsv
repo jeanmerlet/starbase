@@ -1,8 +1,8 @@
-name	class	subclass	char	color	graphic	blocking	hp	regen_rate	base_shp	base_scr	base_scd	attacks	damage	dam_type	shp_bonus	scr_bonus	scd_bonus	slot_type	heal_amount
-skitterling	actor	None	s	dark purple	None	True	8	1	0	0	0	claw,claw	1d2,1d2	kinetic,kinetic	None	None	None	None	None
-rustbot	actor	None	R	darker red	None	True	25	0	0	0	0	slam	1d8	kinetic	None	None	None	None	None
-kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	None	None	None	None	0	0	0	armor	None
-plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	None	None	None	0	0	0	armor	None
-basic shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	None	None	None	9	3	3	shields	None
-blaster	equippable	None	/	dark gray	None	False	None	None	None	None	None	None	2d12	energy	0	0	0	weapon	None
-stimpack	consumable	healing	+	light red	None	False	None	None	None	None	None	None	None	None	None	None	None	None	10d2
+name	class	subclass	char	color	graphic	blocking	hp	regen_rate	base_shp	base_scr	base_scd	attacks	att_type	damage	dam_type	shp_bonus	scr_bonus	scd_bonus	slot_type	heal_amount
+skitterling	actor	None	s	dark purple	None	True	8	1	0	0	0	claw,claw	melee,melee	1d2,1d2	kinetic,kinetic	None	None	None	None	None
+rustbot	actor	None	R	darker red	None	True	25	0	0	0	0	slam	melee	1d8	kinetic	None	None	None	None	None
+kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	None	None	None	None	None	0	0	0	armor	None
+plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	None	None	None	None	0	0	0	armor	None
+basic shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	None	None	None	None	9	3	3	shields	None
+blaster	equippable	None	/	black	None	False	None	None	None	None	None	None	ranged	2d12	energy	0	0	0	weapon	None
+stimpack	consumable	healing	+	light red	None	False	None	None	None	None	None	None	None	None	None	None	None	None	None	10d2

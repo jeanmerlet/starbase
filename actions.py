@@ -107,8 +107,28 @@ class AttackAction(Action):
             dam = target.combat.shields.take_hit(dam)
         return dam
 
+    #TODO: log text includes shields
+    def _attack(self, attack, target, engine, entity):
+        if not target.is_alive(): return
+        dam = self._get_damage(attack, entity, target)
+        target.combat.hit_points.take_damage(dam)
+        if entity is engine.player:
+            subj = 'You'
+            verb = 'hit'
+            obj = f'the {target.name}'
+        else:
+            subj = f'The {entity.name}'
+            verb = 'hits'
+            obj = 'you'
+        if dam > 0:
+            msg = f'{subj} {verb} {obj} for {dam} damage.'
+            engine.gui.log.add_message(msg)
+        else:
+            msg = f'{subj} {verb} {obj} but does no damage.'
+            engine.gui.log.add_message(msg)
+        self._check_for_death(engine, target)
 
-#TODO: log text includes shields
+
 class MeleeAction(DirectedAction, AttackAction):
     def __init__(self, dx, dy):
         DirectedAction.__init__(self, dx, dy)
@@ -121,25 +141,16 @@ class MeleeAction(DirectedAction, AttackAction):
             msg = 'Nothing there.'
             engine.gui.log.add_message(msg)
         else:
-            for attack in entity.combat.attacks:
-                if not target.is_alive(): return
-                dam = self._get_damage(attack, entity, target)
-                target.combat.hit_points.take_damage(dam)
-                if entity is engine.player:
-                    subj = 'You'
-                    verb = 'hit'
-                    obj = f'the {target.name}'
-                else:
-                    subj = f'The {entity.name}'
-                    verb = 'hits'
-                    obj = 'you'
-                if dam > 0:
-                    msg = f'{subj} {verb} {obj} for {dam} damage.'
-                    engine.gui.log.add_message(msg)
-                else:
-                    msg = f'{subj} {verb} {obj} but does no damage.'
-                    engine.gui.log.add_message(msg)
-                self._check_for_death(engine, target)
+            for attack in entity.combat.melee_attacks:
+                self._attack(attack, target, engine, entity)
+
+
+class RangedAction(AttackAction):
+    def perform(self, engine, entity):
+        target = entity.target
+        for attack in entity.combat.ranged_attacks:
+            self._attack(attack, target, engine, entity)
+        engine.event_handler.actions.append(CancelTargetAction())
 
 
 class CheckAction(DirectedAction):
@@ -204,21 +215,22 @@ class NextTargetAction(ReticuleAction):
         tgts = engine.get_hostile_ents_visible_from_xy(entity.x, entity.y)
         tgts = engine.get_dist_sorted_entities(tgts)
         if not tgts:
-            msg = 'Nothing to target.'
-            engine.gui.log.add_message(msg)
+            return
+        elif (engine.viewport.reticule is None and
+             not entity.combat.ranged_attacks):
+            return
+        if entity.target:
+            target = tgts[(tgts.index(entity.target) + 1) % len(tgts)]
         else:
-            if entity.target:
-                target = tgts[(tgts.index(entity.target) + 1) % len(tgts)]
-            else:
-                target = tgts[0]
-            entity.target = target
-            engine.gui.target_display.target = target
-            if engine.viewport.reticule:
-                engine.viewport.reticule.x = target.x
-                engine.viewport.reticule.y = target.y
-            else:
-                self._create_reticule(target.x, target.y, engine)
-                engine.push_event_handler(eh.TargetEventHandler())
+            target = tgts[0]
+        entity.target = target
+        engine.gui.target_display.target = target
+        if engine.viewport.reticule:
+            engine.viewport.reticule.x = target.x
+            engine.viewport.reticule.y = target.y
+        else:
+            self._create_reticule(target.x, target.y, engine)
+            engine.push_event_handler(eh.TargetEventHandler())
 
 
 class InspectUnderReticuleAction(ReticuleAction):

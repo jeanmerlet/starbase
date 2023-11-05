@@ -78,9 +78,10 @@ class HealingConsumable(Consumable):
 
 
 class Equippable(Item):
-    def __init__(self, name, x, y, char, color, graphic, damage, damage_type,
-                 shp_bonus, scr_bonus, scd_bonus, slot_type):
+    def __init__(self, name, x, y, char, color, graphic, att_type, damage,
+                 damage_type, shp_bonus, scr_bonus, scd_bonus, slot_type):
         super().__init__(name, x, y, char, color, graphic)
+        self.att_type = att_type
         self.damage = damage
         self.damage_type = damage_type
         self.shp_bonus = shp_bonus

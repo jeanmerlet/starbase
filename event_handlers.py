@@ -108,7 +108,7 @@ class TargetEventHandler(EventHandler):
                 action = NextTargetAction()
             elif (event == blt.TK_F or event == blt.TK_ENTER or
                  event == blt.TK_KP_ENTER):
-                action = RangedAttackAction()
+                action = RangedAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
             action = MoveReticuleAction(dx, dy)

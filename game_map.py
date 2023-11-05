@@ -112,6 +112,7 @@ class Map:
         if np.random.rand() < 0.25: return None
         dist = [0.35, 0.15, 0, 0.1, 0.2, 0, 0.2]
         #dist = [0, 0, 0, 0, 1, 0, 0]
+        dist = [0, 0.5, 0, 0, 0, 0.5, 0]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -136,19 +137,23 @@ class Map:
     def _get_actor_attacks(self, props):
         names = props['attacks'].split(',')
         dice = props['damage'].split(',')
-        types = props['dam_type'].split(',')
-        attacks = []
+        att_types = props['att_type'].split(',')
+        dam_types = props['dam_type'].split(',')
+        melee_attacks, ranged_attacks = [], []
         for i in range(len(names)):
-            attack = Attack(names[i], dice[i], types[i])
-            attacks.append(attack)
-        return attacks
+            attack = Attack(names[i], dice[i], dam_types[i])
+            if att_types[i] == 'melee':
+                melee_attacks.append(attack)
+            else:
+                ranged_attacks.append(attack)
+        return melee_attacks, ranged_attacks
 
     def _spawn_actor(self, name, props, x, y):
         hp = HitPoints(props['hp'], props['regen_rate'])
         shields = Shields(props['base_shp'], props['base_scr'],
                           props['base_scd'])
-        attacks = self._get_actor_attacks(props)
-        combat = Combat(hp, shields, attacks)
+        melee_attacks, ranged_attacks = self._get_actor_attacks(props)
+        combat = Combat(hp, shields, melee_attacks, ranged_attacks)
         ai = HostileEnemy()
         fov_radius = None
         inventory = Inventory()
@@ -171,10 +176,10 @@ class Map:
 
     def _spawn_equippable(self, name, props, x, y):
         entity = Equippable(name, x, y, props['char'], props['color'],
-                            props['graphic'], props['damage'],
-                            props['dam_type'], props['shp_bonus'],
-                            props['scr_bonus'], props['scd_bonus'],
-                            props['slot_type'])
+                            props['graphic'], props['att_type'],
+                            props['damage'], props['dam_type'],
+                            props['shp_bonus'], props['scr_bonus'],
+                            props['scd_bonus'], props['slot_type'])
         return entity
 
     def _spawn_entity(self, entities, room, name):
@@ -209,8 +214,9 @@ class Map:
         startx, starty = self._get_start_xy()
         hit_points = HitPoints(30, 0.1)
         shields = Shields(0, 0, 0)
-        attacks = [Attack('punch', '3d4', 'kinetic')]
-        combat = Combat(hit_points, shields, attacks)
+        melee_attacks = [Attack('punch', '3d4', 'kinetic')]
+        ranged_attacks = []
+        combat = Combat(hit_points, shields, melee_attacks, ranged_attacks)
         ai = BaseAI()
         inventory = Inventory()
         equipment = Equipment(None, None, None)
