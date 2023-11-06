@@ -112,7 +112,7 @@ class Map:
         if np.random.rand() < 0.25: return None
         dist = [0.35, 0.15, 0, 0.1, 0.2, 0, 0.2]
         #dist = [0, 0, 0, 0, 1, 0, 0]
-        dist = [0, 0.5, 0, 0, 0, 0.5, 0]
+        dist = [0, 0, 0, 0, 0.5, 0.5, 0]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -220,9 +220,16 @@ class Map:
         ai = BaseAI()
         inventory = Inventory()
         equipment = Equipment(None, None, None)
+        attributes = {
+            'strength': 5,
+            'agility': 5,
+            'intellect': 5,
+            'willpower': 5
+        }
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', graphic=None, combat=combat, ai=ai,
-                       fov_radius=7, inventory=inventory, equipment=equipment)
+                       fov_radius=7, inventory=inventory, equipment=equipment,
+                       attributes)
         player.ai.entity = player
         player.inventory.entity = player
         player.equipment.entity = player

@@ -25,7 +25,7 @@ class Entity:
 
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, graphic, combat, ai,
-                 fov_radius, inventory, equipment):
+                 fov_radius, inventory, equipment, attributes):
         super().__init__(name, x, y, char, color, graphic, blocking=True,
                          render_order=0)
         self.combat = combat
@@ -33,6 +33,7 @@ class Actor(Entity):
         self.fov_radius = fov_radius
         self.inventory = inventory
         self.equipment = equipment
+        self.attributes = attributes
 
     def move(self, dx, dy):
         self.x += dx

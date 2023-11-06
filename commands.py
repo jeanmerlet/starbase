@@ -9,7 +9,11 @@ MOVE_CMDS = {
     blt.TK_KP_6: (1, 0),
     blt.TK_KP_7: (-1, -1),
     blt.TK_KP_8: (0, -1),
-    blt.TK_KP_9: (1, -1)
+    blt.TK_KP_9: (1, -1),
+    blt.TK_DOWN: (0, 1),
+    blt.TK_LEFT: (-1, 0),
+    blt.TK_RIGHT: (1, 0),
+    blt.TK_UP: (0, -1)
 }
 
 WAIT_CMDS = {

@@ -9,6 +9,9 @@ class Combat:
         self.base_melee_attacks = melee_attacks
         self.base_ranged_attacks = ranged_attacks
 
+    def defense(self):
+        return self.entity.evasion.get_value()
+
     def _update_weapon_attacks(self, equipment_items):
         weapon = equipment_items['weapon']
         if weapon is None:
@@ -47,7 +50,7 @@ class Attack:
         self.damage_type = damage_type
 
     def roll_hit(self):
-        pass
+        return self.entity.skills
 
     def roll_damage(self):
         rolls = np.random.randint(1, self.damage + 1, self.num_dice)
@@ -175,3 +178,19 @@ class Shields:
                 self.hp = 0
                 self.time_until_charge = self.charge_delay + 1
                 self.equipped_shield = equipment_items['shields']
+
+
+class Skill:
+    def __init__(self, name, value, attr1, attr1_mod, attr2, attr2_mod):
+        self.name = name
+        self.value = value
+        self.attr1 = attr1
+        self.attr1_mod = attr1_mod
+        self.attr2 = attr2
+        self.attr2_mod = attr2_mod
+
+    def get_value(self):
+        mod1 = self.entity.attributes[self.attr1] * self.attr1_mod
+        mod2 = self.entity.attributes[self.attr2] * self.attr2_mod
+        total = self.value + mod1 + mod2
+        return total

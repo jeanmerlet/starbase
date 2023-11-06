@@ -107,19 +107,27 @@ class AttackAction(Action):
             dam = target.combat.shields.take_hit(dam)
         return dam
 
+    def _roll_hit(self, attack, entity, target):
+        hit = attack.roll_hit() - target.combat.defense()
+        if hit >= 0: return True
+        return False
+
     #TODO: log text includes shields
     def _attack(self, attack, target, engine, entity):
         if not target.is_alive(): return
-        dam = self._get_damage(attack, entity, target)
-        target.combat.hit_points.take_damage(dam)
         if entity is engine.player:
             subj = 'You'
-            verb = 'hit'
             obj = f'the {target.name}'
         else:
             subj = f'The {entity.name}'
-            verb = 'hits'
             obj = 'you'
+        if not attack.roll_hit():
+            verb = 'miss' if entity is engine.player else 'misses'
+            msg = f'{subj} {verb} {obj}.'
+            return
+        dam = self._get_damage(attack, entity, target)
+        target.combat.hit_points.take_damage(dam)
+        verb = 'hit' if entity is engine.player else 'hits'
         if dam > 0:
             msg = f'{subj} {verb} {obj} for {dam} damage.'
             engine.gui.log.add_message(msg)

@@ -4,5 +4,5 @@ rustbot	actor	None	R	darker red	None	True	25	0	0	0	0	slam	melee	1d8	kinetic	None
 kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	None	None	None	None	None	0	0	0	armor	None
 plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	None	None	None	None	0	0	0	armor	None
 basic shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	None	None	None	None	9	3	3	shields	None
-blaster	equippable	None	/	black	None	False	None	None	None	None	None	None	ranged	2d12	energy	0	0	0	weapon	None
+blaster	equippable	None	/	black	[0xE006]	False	None	None	None	None	None	None	ranged	2d12	energy	0	0	0	weapon	None
 stimpack	consumable	healing	+	light red	None	False	None	None	None	None	None	None	None	None	None	None	None	None	None	10d2
