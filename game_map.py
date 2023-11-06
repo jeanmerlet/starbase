@@ -254,7 +254,7 @@ class Map:
         attributes = self._create_actor_attributes(5, 5, 5, 5)
         skills = self._create_actor_skills(50, 50, 10)
         player = Actor(name='player', x=startx, y=starty, char='@',
-                       color='amber', graphic=None, combat=combat, ai=ai,
+                       color='amber', graphic='[0xE008]', combat=combat, ai=ai,
                        fov_radius=7, inventory=inventory, equipment=equipment,
                        attributes=attributes, skills=skills)
         player.ai.entity = player

@@ -43,6 +43,7 @@ def set_blt_settings():
     blt.set('0xE005: ./graphics/basic_shield_belt.png, spacing=4x2')
     blt.set('0xE006: ./graphics/blaster.png, spacing=4x2')
     blt.set('0xE007: ./graphics/skitterling.png, spacing=4x2')
+    blt.set('0xE008: ./graphics/marine.png, spacing=4x2')
 
     blt.set('palette.shade = 200,0,0,0')
     blt.set('palette.blue = 0,102,204')
