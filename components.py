@@ -10,28 +10,30 @@ class Combat:
         self.base_ranged_attacks = ranged_attacks
 
     def defense(self):
-        return self.entity.evasion.get_value()
+        return self.entity.skills['evasion'].get_value()
 
     def _update_weapon_attacks(self, equipment_items):
         weapon = equipment_items['weapon']
         if weapon is None:
             self.melee_attacks = self.base_melee_attacks
             self.ranged_attacks = self.base_ranged_attacks
-            return
-        name = weapon.name
-        damage = weapon.damage
-        damage_type = weapon.damage_type
-        #range = weapon.range
-        if weapon.att_type == 'melee':
-            self.melee_attacks = [Attack(name, damage, damage_type)]
-            for i, attack in enumerate(self.melee_attacks):
-                attack.update(i, equipment_items)
-            self.ranged_attacks = self.base_ranged_attacks
         else:
-            self.ranged_attacks = [Attack(name, damage, damage_type)]
-            for i, attack in enumerate(self.ranged_attacks):
-                attack.update(i, equipment_items)
-            self.melee_attacks = self.base_melee_attacks
+            name = weapon.name
+            damage = weapon.damage
+            damage_type = weapon.damage_type
+            #range = weapon.range
+            if weapon.att_type == 'melee':
+                self.melee_attacks = [MeleeAttack(name, damage, damage_type)]
+                self.ranged_attacks = self.base_ranged_attacks
+            else:
+                self.ranged_attacks = [RangedAttack(name, damage, damage_type)]
+                self.melee_attacks = self.base_melee_attacks
+        for i, attack in enumerate(self.melee_attacks):
+            attack.combat = self
+            attack.update(i, equipment_items)
+        for i, attack in enumerate(self.ranged_attacks):
+            attack.combat = self
+            attack.update(i, equipment_items)
 
     def update_equipment(self, equipment_items):
         self.shields.update(equipment_items)
@@ -49,9 +51,6 @@ class Attack:
         self.num_dice, self.damage = hf.parse_dice(damage)
         self.damage_type = damage_type
 
-    def roll_hit(self):
-        return self.entity.skills
-
     def roll_damage(self):
         rolls = np.random.randint(1, self.damage + 1, self.num_dice)
         damage = np.sum(rolls)
@@ -59,6 +58,38 @@ class Attack:
 
     def update(self, attack_num, equipment_items):
         pass
+
+
+class MeleeAttack(Attack):
+    def __init__(self, name, damage, damage_type):
+        super().__init__(name, damage, damage_type)
+
+    def hit_chance(self):
+        return self.combat.entity.skills['melee'].get_value()
+
+
+class RangedAttack(Attack):
+    def __init__(self, name, damage, damage_type):
+        super().__init__(name, damage, damage_type)
+
+    def hit_chance(self):
+        return self.combat.entity.skills['ranged'].get_value()
+
+
+class Skill:
+    def __init__(self, name, value, attr1, attr1_mod, attr2, attr2_mod):
+        self.name = name
+        self.value = value
+        self.attr1 = attr1
+        self.attr1_mod = attr1_mod
+        self.attr2 = attr2
+        self.attr2_mod = attr2_mod
+
+    def get_value(self):
+        mod1 = self.entity.attributes[self.attr1] * self.attr1_mod
+        mod2 = self.entity.attributes[self.attr2] * self.attr2_mod
+        total = self.value + mod1 + mod2
+        return total
 
 
 class HitPoints:
@@ -178,19 +209,3 @@ class Shields:
                 self.hp = 0
                 self.time_until_charge = self.charge_delay + 1
                 self.equipped_shield = equipment_items['shields']
-
-
-class Skill:
-    def __init__(self, name, value, attr1, attr1_mod, attr2, attr2_mod):
-        self.name = name
-        self.value = value
-        self.attr1 = attr1
-        self.attr1_mod = attr1_mod
-        self.attr2 = attr2
-        self.attr2_mod = attr2_mod
-
-    def get_value(self):
-        mod1 = self.entity.attributes[self.attr1] * self.attr1_mod
-        mod2 = self.entity.attributes[self.attr2] * self.attr2_mod
-        total = self.value + mod1 + mod2
-        return total

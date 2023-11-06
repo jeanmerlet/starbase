@@ -5,6 +5,7 @@ from entities import Actor, Equippable, Consumable
 from ai import HostileEnemy
 from tiles import Door
 import event_handlers as eh
+import numpy as np
 
 
 class Action:
@@ -108,8 +109,9 @@ class AttackAction(Action):
         return dam
 
     def _roll_hit(self, attack, entity, target):
-        hit = attack.roll_hit() - target.combat.defense()
-        if hit >= 0: return True
+        hit_chance = attack.hit_chance() - target.combat.defense()
+        roll = np.random.randint(101)
+        if roll <= hit_chance: return True
         return False
 
     #TODO: log text includes shields
@@ -121,9 +123,10 @@ class AttackAction(Action):
         else:
             subj = f'The {entity.name}'
             obj = 'you'
-        if not attack.roll_hit():
+        if not self._roll_hit(attack, entity, target):
             verb = 'miss' if entity is engine.player else 'misses'
             msg = f'{subj} {verb} {obj}.'
+            engine.gui.log.add_message(msg)
             return
         dam = self._get_damage(attack, entity, target)
         target.combat.hit_points.take_damage(dam)

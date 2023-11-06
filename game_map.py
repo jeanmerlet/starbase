@@ -112,7 +112,7 @@ class Map:
         if np.random.rand() < 0.25: return None
         dist = [0.35, 0.15, 0, 0.1, 0.2, 0, 0.2]
         #dist = [0, 0, 0, 0, 1, 0, 0]
-        dist = [0, 0, 0, 0, 0.5, 0.5, 0]
+        dist = [0.5, 0, 0, 0, 0.25, 0.25, 0]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -141,12 +141,33 @@ class Map:
         dam_types = props['dam_type'].split(',')
         melee_attacks, ranged_attacks = [], []
         for i in range(len(names)):
-            attack = Attack(names[i], dice[i], dam_types[i])
             if att_types[i] == 'melee':
+                attack = MeleeAttack(names[i], dice[i], dam_types[i])
                 melee_attacks.append(attack)
             else:
+                attack = RangedAttack(names[i], dice[i], dam_types[i])
                 ranged_attacks.append(attack)
         return melee_attacks, ranged_attacks
+
+    def _create_actor_attributes(self, strength, agility, intellect, willpower):
+        attributes = {
+            'strength': strength,
+            'agility': agility,
+            'intellect': intellect,
+            'willpower': willpower
+        }
+        return attributes
+
+    def _create_actor_skills(self, melee, ranged, evasion):
+        melee_skill = Skill('melee', melee, 'strength', 2, 'agility', 1)
+        ranged_skill = Skill('ranged', ranged, 'agility', 2, 'intellect', 1)
+        evasion = Skill('evasion', evasion, 'agility', 2, 'intellect', 1)
+        skills = {
+            'melee': melee_skill,
+            'ranged': ranged_skill,
+            'evasion': evasion
+        }
+        return skills
 
     def _spawn_actor(self, name, props, x, y):
         hp = HitPoints(props['hp'], props['regen_rate'])
@@ -158,12 +179,22 @@ class Map:
         fov_radius = None
         inventory = Inventory()
         equipment = Equipment(None, None, None)
+        strength, agility = props['strength'], props['agility']
+        intellect, willpower = props['intellect'], props['willpower']
+        attributes = self._create_actor_attributes(strength, agility,
+                                                   intellect, willpower)
+        melee, ranged = props['melee'], props['ranged']
+        evasion = props['evasion']
+        skills = self._create_actor_skills(melee, ranged, evasion)
         entity = Actor(name, x, y, props['char'], props['color'],
                        props['graphic'], combat, ai, fov_radius, inventory,
-                       equipment)
+                       equipment, attributes, skills)
         entity.ai.entity = entity
+        entity.combat.entity = entity
         entity.equipment.entity = entity
         entity.equipment.update_actor_stats()
+        for name, skill in entity.skills.items():
+            skill.entity = entity
         return entity
 
     def _spawn_consumable(self, name, props, x, y):
@@ -214,24 +245,23 @@ class Map:
         startx, starty = self._get_start_xy()
         hit_points = HitPoints(30, 0.1)
         shields = Shields(0, 0, 0)
-        melee_attacks = [Attack('punch', '3d4', 'kinetic')]
+        melee_attacks = [MeleeAttack('punch', '3d4', 'kinetic')]
         ranged_attacks = []
         combat = Combat(hit_points, shields, melee_attacks, ranged_attacks)
         ai = BaseAI()
         inventory = Inventory()
         equipment = Equipment(None, None, None)
-        attributes = {
-            'strength': 5,
-            'agility': 5,
-            'intellect': 5,
-            'willpower': 5
-        }
+        attributes = self._create_actor_attributes(5, 5, 5, 5)
+        skills = self._create_actor_skills(50, 50, 10)
         player = Actor(name='player', x=startx, y=starty, char='@',
                        color='amber', graphic=None, combat=combat, ai=ai,
                        fov_radius=7, inventory=inventory, equipment=equipment,
-                       attributes)
+                       attributes=attributes, skills=skills)
         player.ai.entity = player
+        player.combat.entity = player
         player.inventory.entity = player
         player.equipment.entity = player
         player.equipment.update_actor_stats()
+        for name, skill in player.skills.items():
+            skill.entity = player
         return player
