@@ -14,6 +14,14 @@ MOVE_CMDS = {
     blt.TK_LEFT: (-1, 0),
     blt.TK_RIGHT: (1, 0),
     blt.TK_UP: (0, -1)
+    blt.TK_B: (-1, 1),
+    blt.TK_J: (0, 1),
+    blt.TK_N: (1, 1),
+    blt.TK_H: (-1, 0),
+    blt.TK_L: (1, 0),
+    blt.TK_Y: (-1, -1),
+    blt.TK_K: (0, -1),
+    blt.TK_U: (1, -1),
 }
 
 WAIT_CMDS = {
@@ -27,7 +35,7 @@ MAIN_CMDS = {
     blt.TK_F,
     blt.TK_G,
     blt.TK_I,
-    blt.TK_U,
+    blt.TK_R,
     blt.TK_T,
     blt.TK_X,
     blt.TK_GRAVE

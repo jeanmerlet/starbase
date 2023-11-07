@@ -78,6 +78,21 @@ class HealingConsumable(Consumable):
         amount = np.sum(np.random.randint(1, self.max_amount + 1, self.rolls))
         self.owner.combat.hit_points.heal(amount)
 
+class ThrowingConsumable(Consumable):
+    def __init__(self, name, x, y, char, color, graphic, damage, damage_type,
+                 max_range, area):
+        super().__init__(name, x, y, char, color, graphic)
+        self.num_rolls, self.max_damage = hf.parse_dice(damage)
+        self.damage_type = damage_type
+        self.max_range = max_range
+        self.area = area
+
+    def _roll_damage(self):
+        return np.sum(np.random.randint(1, self.max_damage + 1, self.num_rolls))
+
+    def use(self):
+        pass
+
 
 class Equippable(Item):
     def __init__(self, name, x, y, char, color, graphic, att_type, damage,

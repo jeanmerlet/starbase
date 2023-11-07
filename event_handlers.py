@@ -44,8 +44,8 @@ class MainEventHandler(EventHandler):
             elif event == blt.TK_I:
                 action = InventoryMenu()
             elif event == blt.TK_T:
-                action = ConsumeMenu()
-            elif event == blt.TK_U:
+                action = ThrowMenu()
+            elif event == blt.TK_R:
                 action = UnequipMenu()
             elif event == blt.TK_X:
                 action = MoveReticuleAction(0, 0)
