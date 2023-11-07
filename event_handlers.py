@@ -38,21 +38,24 @@ class MainEventHandler(EventHandler):
             elif event == blt.TK_E:
                 action = EquipMenu()
             elif event == blt.TK_F:
-                action = NextTargetAction()
+                action = CreateWeaponReticule()
             elif event == blt.TK_G:
                 action = PickupAction()
             elif event == blt.TK_I:
                 action = InventoryMenu()
             elif event == blt.TK_T:
                 action = ThrowMenu()
+            elif event == blt.TK_Q:
+                if blt.check(blt.TK_CONTROL):
+                    action = QuitAction()
+                else:
+                    action = InjectMenu()
             elif event == blt.TK_R:
                 action = UnequipMenu()
             elif event == blt.TK_X:
-                action = MoveReticuleAction(0, 0)
+                action = CreateInspectReticule()
             elif event == blt.TK_GRAVE:
                 action = FPSToggle()
-        elif event in QUIT_CMD:
-            action = QuitAction()
         return action
 
 
@@ -73,9 +76,14 @@ class InspectEntityHandler(MenuEventHandler):
         return None
 
 
-class ConsumeMenuHandler(MenuEventHandler):
+class InjectMenuHandler(MenuEventHandler):
     def _get_action(self, selection):
-        return ConsumeItem(selection)
+        return InjectItem(selection)
+
+
+class ThrowMenuHandler(MenuEventHandler):
+    def _get_action(self, selection):
+        return ThrowItem(selection)
 
 
 class DropMenuHandler(MenuEventHandler):
@@ -98,7 +106,7 @@ class UnequipMenuHandler(MenuEventHandler):
         return UnequipItem(selection)
 
 
-class TargetEventHandler(EventHandler):
+class RangedAttackEventHandler(EventHandler):
     def _dispatch(self, event, engine):
         action = None
         if event in CANCEL_CMD:
@@ -111,7 +119,27 @@ class TargetEventHandler(EventHandler):
                 action = RangedAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
-            action = MoveReticuleAction(dx, dy)
+            action = MoveReticule(dx, dy)
+        return action
+
+
+class ThrowEventHandler(EventHandler):
+    def __init__(self, item):
+        super().__init__()
+        self.item = item
+
+    def _dispatch(self, event, engine):
+        action = None
+        if event in CANCEL_CMD:
+            action = CancelTargetAction()
+        elif event in TARGET_CMDS:
+            if event == blt.TK_TAB:
+                action = NextTargetAction()
+            elif event == blt.TK_ENTER or event == blt.TK_KP_ENTER:
+                action = ThrowAction(self.item)
+        elif event in MOVE_CMDS:
+            dx, dy = MOVE_CMDS[event]
+            action = MoveReticule(dx, dy)
         return action
 
 
@@ -127,7 +155,7 @@ class InspectEventHandler(EventHandler):
                 action = InspectUnderReticuleAction()
         elif event in MOVE_CMDS:
             dx, dy = MOVE_CMDS[event]
-            action = MoveReticuleAction(dx, dy)
+            action = MoveReticule(dx, dy)
         return action
 
 
@@ -135,5 +163,6 @@ class GameOverEventHandler(EventHandler):
     def _dispatch(self, event, engine):
         action = None
         if event in QUIT_CMD:
-            action = QuitAction()
+            if blt.check(blt.TK_CONTROL):
+                action = QuitAction()
         return action

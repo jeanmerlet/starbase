@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
 from procgen import Grid, RectRoom, Hallway
-from entities import Actor, ThrowingConsumable, HealingConsumable, Equippable
+from entities import Actor, ThrownConsumable, InjectedConsumable, Equippable
 from components import *
 from ai import BaseAI, HostileEnemy, DoorAI
 from tiles import *
@@ -134,16 +134,20 @@ class Map:
 
     def _get_actor_attacks(self, props):
         names = props['attacks'].split(',')
+        max_ranges = props['range'].split(',')
+        areas = props['area'].split(',')
         dice = props['damage'].split(',')
         att_types = props['att_type'].split(',')
         dam_types = props['dam_type'].split(',')
         melee_attacks, ranged_attacks = [], []
         for i in range(len(names)):
             if att_types[i] == 'melee':
-                attack = MeleeAttack(names[i], dice[i], dam_types[i])
+                attack = MeleeAttack(names[i], dice[i], dam_types[i],
+                                     max_ranges[i], areas[i])
                 melee_attacks.append(attack)
             else:
-                attack = RangedAttack(names[i], dice[i], dam_types[i])
+                attack = RangedAttack(names[i], dice[i], dam_types[i],
+                                      max_ranges[i], areas[i])
                 ranged_attacks.append(attack)
         return melee_attacks, ranged_attacks
 
@@ -197,20 +201,22 @@ class Map:
 
     def _spawn_consumable(self, name, props, x, y):
         subclass = props['subclass']
-        if subclass == 'healing':
-            entity = HealingConsumable(name, x, y, props['char'],
+        if subclass == 'injected':
+            entity = InjectedConsumable(name, x, y, props['char'],
                                        props['color'], props['graphic'],
-                                       props['heal_amount'])
+                                       props['heal_amount'], props['verb'])
         elif subclass == 'thrown':
-            entity = ThrowingConsumable(name, x, y, props['char'],
+            entity = ThrownConsumable(name, x, y, props['char'],
                                       props['color'], props['graphic'],
                                       props['damage'], props['dam_type'],
-                                      props['range'], props['area'])
+                                      props['range'], props['area'],
+                                      props['verb'])
         return entity
 
     def _spawn_equippable(self, name, props, x, y):
         entity = Equippable(name, x, y, props['char'], props['color'],
                             props['graphic'], props['att_type'],
+                            props['max_range]'], props['area'],
                             props['damage'], props['dam_type'],
                             props['shp_bonus'], props['scr_bonus'],
                             props['scd_bonus'], props['slot_type'])
@@ -248,7 +254,7 @@ class Map:
         startx, starty = self._get_start_xy()
         hit_points = HitPoints(30, 0.1)
         shields = Shields(0, 0, 0)
-        melee_attacks = [MeleeAttack('punch', '3d4', 'kinetic')]
+        melee_attacks = [MeleeAttack('punch', '3d4', 'kinetic', 1, 0)]
         ranged_attacks = []
         combat = Combat(hit_points, shields, melee_attacks, ranged_attacks)
         ai = BaseAI()

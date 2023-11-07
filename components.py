@@ -21,12 +21,15 @@ class Combat:
             name = weapon.name
             damage = weapon.damage
             damage_type = weapon.damage_type
-            #range = weapon.range
+            max_range = weapon.max_range
+            area = weapon.area
             if weapon.att_type == 'melee':
-                self.melee_attacks = [MeleeAttack(name, damage, damage_type)]
+                self.melee_attacks = [MeleeAttack(name, damage, damage_type,
+                                                  max_range, area)]
                 self.ranged_attacks = self.base_ranged_attacks
             else:
-                self.ranged_attacks = [RangedAttack(name, damage, damage_type)]
+                self.ranged_attacks = [RangedAttack(name, damage, damage_type,
+                                                    max_range, area)]
                 self.melee_attacks = self.base_melee_attacks
         for i, attack in enumerate(self.melee_attacks):
             attack.combat = self
@@ -45,11 +48,13 @@ class Combat:
 
 
 class Attack:
-    def __init__(self, name, damage, damage_type):
+    def __init__(self, name, damage, damage_type, max_range, area):
         self.name = name
         self.dice = damage
         self.num_dice, self.damage = hf.parse_dice(damage)
         self.damage_type = damage_type
+        self.max_range = float(max_range)
+        self.area = int(area)
 
     def roll_damage(self):
         rolls = np.random.randint(1, self.damage + 1, self.num_dice)
@@ -61,16 +66,16 @@ class Attack:
 
 
 class MeleeAttack(Attack):
-    def __init__(self, name, damage, damage_type):
-        super().__init__(name, damage, damage_type)
+    def __init__(self, name, damage, damage_type, max_range, area):
+        super().__init__(name, damage, damage_type, max_range, area)
 
     def hit_chance(self):
         return self.combat.entity.skills['melee'].get_value()
 
 
 class RangedAttack(Attack):
-    def __init__(self, name, damage, damage_type):
-        super().__init__(name, damage, damage_type)
+    def __init__(self, name, damage, damage_type, max_range, area):
+        super().__init__(name, damage, damage_type, max_range, area)
 
     def hit_chance(self):
         return self.combat.entity.skills['ranged'].get_value()

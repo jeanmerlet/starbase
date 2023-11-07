@@ -1,9 +1,9 @@
-name	class	subclass	char	color	graphic	blocking	hp	regen_rate	base_shp	base_scr	base_scd	attacks	att_type	range	area	damage	dam_type	shp_bonus	scr_bonus	scd_bonus	slot_type	heal_amount	strength	agility	intellect	willpower	melee	ranged	evasion
-skitterling	actor	None	s	dark purple	[0xE007]	True	8	1	0	0	0	claw,claw	melee,melee	1, 1	0	1d2,1d2	kinetic,kinetic	None	None	None	None	None	2	8	2	2	50	0	20
-robot	actor	None	R	darker red	None	True	40	0	0	0	0	slam	melee	1	0	1d8	kinetic	None	None	None	None	None	8	2	2	2	50	0	0
-kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	None	None	None	None	None	None	None	0	0	0	armor	None	None	None	None	None	None	None	None
-plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	None	None	None	None	None	None	0	0	0	armor	None	None	None	None	None	None	None	None
-shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	None	None	None	None	None	None	9	3	3	shields	None	None	None	None	None	None	None	None
-laser pistol	equippable	None	/	dark red	[0xE006]	False	None	None	None	None	None	None	ranged	5	0	2d12	energy	0	0	0	weapon	None	None	None	None	None	None	None	None
-stimpack	consumable	healing	+	light red	None	False	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	10d2	None	None	None	None	None	None	None
-frag. grenade	consumable	thrown	/	dark green	[0xE009]	False	None	None	None	None	None	None	None	5	2	8d6	explosive	None	None	None	None	None	None	None	None	None	None	None	None
+name	class	subclass	char	color	graphic	blocking	hp	regen_rate	base_shp	base_scr	base_scd	attacks	att_type	range	area	damage	dam_type	shp_bonus	scr_bonus	scd_bonus	slot_type	heal_amount	strength	agility	intellect	willpower	melee	ranged	evasion	verb
+skitterling	actor	None	s	dark purple	[0xE007]	True	8	1	0	0	0	claw,claw	melee,melee	1, 1	0,0	1d2,1d2	kinetic,kinetic	None	None	None	None	None	2	8	2	2	50	0	20	None
+robot	actor	None	R	darker red	None	True	40	0	0	0	0	slam	melee	1	0	1d8	kinetic	None	None	None	None	None	8	2	2	2	50	0	0	None
+kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	None	None	None	None	None	None	None	0	0	0	armor	None	None	None	None	None	None	None	None	None
+plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	None	None	None	None	None	None	0	0	0	armor	None	None	None	None	None	None	None	None	None
+shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	None	None	None	None	None	None	9	3	3	shields	None	None	None	None	None	None	None	None	None
+laser pistol	equippable	None	/	dark red	[0xE006]	False	None	None	None	None	None	None	ranged	5	0	2d12	energy	0	0	0	weapon	None	None	None	None	None	None	None	None	None
+stimpack	consumable	injected	+	light red	None	False	None	None	None	None	None	None	None	None	None	None	None	None	None	None	None	10d2	None	None	None	None	None	None	None	inject
+frag. grenade	consumable	thrown	/	dark green	[0xE009]	False	None	None	None	None	None	None	None	5	2	8d6	explosive	None	None	None	None	None	None	None	None	None	None	None	None	throw

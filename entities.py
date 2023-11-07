@@ -62,43 +62,45 @@ class Item(Entity):
 
 
 class Consumable(Item):
-    def __init__(self, name, x, y, char, color, graphic):
+    def __init__(self, name, x, y, char, color, graphic, verb):
         super().__init__(name, x, y, char, color, graphic)
+        self.verb = verb
 
     def use(self):
         raise NotImplementedError()
 
 
-class HealingConsumable(Consumable):
-    def __init__(self, name, x, y, char, color, graphic, amount):
-        super().__init__(name, x, y, char, color, graphic)
+class InjectedConsumable(Consumable):
+    def __init__(self, name, x, y, char, color, graphic, amount, verb):
+        super().__init__(name, x, y, char, color, graphic, verb)
         self.rolls, self.max_amount = hf.parse_dice(amount)
 
     def use(self):
         amount = np.sum(np.random.randint(1, self.max_amount + 1, self.rolls))
         self.owner.combat.hit_points.heal(amount)
 
-class ThrowingConsumable(Consumable):
+
+class ThrownConsumable(Consumable):
     def __init__(self, name, x, y, char, color, graphic, damage, damage_type,
-                 max_range, area):
-        super().__init__(name, x, y, char, color, graphic)
-        self.num_rolls, self.max_damage = hf.parse_dice(damage)
+                 max_range, area, verb):
+        super().__init__(name, x, y, char, color, graphic, verb)
+        self.rolls, self.max_damage = hf.parse_dice(damage)
         self.damage_type = damage_type
-        self.max_range = max_range
-        self.area = area
+        self.max_range = float(max_range)
+        self.area = int(area)
 
-    def _roll_damage(self):
-        return np.sum(np.random.randint(1, self.max_damage + 1, self.num_rolls))
-
-    def use(self):
-        pass
+    def roll_damage(self):
+        return np.sum(np.random.randint(1, self.max_damage + 1, self.rolls))
 
 
 class Equippable(Item):
-    def __init__(self, name, x, y, char, color, graphic, att_type, damage,
-                 damage_type, shp_bonus, scr_bonus, scd_bonus, slot_type):
+    def __init__(self, name, x, y, char, color, graphic, att_type, max_range,
+                 area, damage, damage_type, shp_bonus, scr_bonus, scd_bonus,
+                 slot_type):
         super().__init__(name, x, y, char, color, graphic)
         self.att_type = att_type
+        self.max_range = float(max_range)
+        self.area = int(area)
         self.damage = damage
         self.damage_type = damage_type
         self.shp_bonus = shp_bonus

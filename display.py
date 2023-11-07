@@ -56,14 +56,29 @@ class Viewport:
 
 
 class Reticule:
-    def __init__(self, x, y):
+    def __init__(self, x, y, max_range, area, color):
         self.x, self.y = x, y
+        self.max_range = float(max_range)
+        self.area = int(area)
+        self.graphic = f'[color={color}][0xE000][/color]'
+
+    def get_xys(self, x, y):
+        xys = []
+        for i in range(-self.area, self.area + 1):
+            for j in range(-self.area, self.area + 1):
+                if (i**2 + j**2) <= self.area**2:
+                    xys.append(((x+i)*4, (y+j)*2))
+        return xys
+    
 
     def render(self, x_off, y_off, px, py):
         x = x_off - (px - self.x)
         y = y_off - (py - self.y)
         blt.composition(1)
-        blt.print(x*4, y*2, '[0xE000]')
+        blt.print(x*4, y*2, self.graphic)
+        if self.area > 0:
+            for x, y in self.get_xys(x, y):
+                blt.print(x, y, self.graphic)
         blt.composition(0)
 
 
