@@ -21,7 +21,7 @@ class FPSToggle(Action):
         self.time_units = 0
 
     def perform(self, engine, entity):
-        engine.gui.show_fps = False if engine.gui.show_fps else True
+        engine.toggle_fps()
 
 
 class QuitAction(Action):
@@ -59,10 +59,10 @@ class MoveAction(DirectedAction):
         dest_tile = engine.game_map.tiles[dest_x, dest_y]
         if blocking_ent:
             msg = f'ERROR: {blocking_ent.name} blocking'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
         elif not engine.game_map.in_bounds(dest_x, dest_y):
             msg = 'ERROR: out of bounds!'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
         elif not dest_tile.walkable:
             if isinstance(dest_tile, Door):
                 action = OpenDoorAction(self.dx, self.dy)
@@ -71,7 +71,7 @@ class MoveAction(DirectedAction):
                 return
             else:
                 msg = "You can't go there."
-                engine.gui.log.add_message(msg)
+                engine.add_log_msg(msg)
         else:
             entity.move(self.dx, self.dy)
 
@@ -96,10 +96,10 @@ class AttackAction(Action):
             if target is engine.player:
                 engine.push_event_handler(eh.GameOverEventHandler())
                 msg = 'You have DIED.'
-                engine.gui.log.add_message(msg)
+                engine.add_log_msg(msg)
             else:
                 msg = f'The {target.name} dies.'
-                engine.gui.log.add_message(msg)
+                engine.add_log_msg(msg)
             target.die()
 
     def _get_damage(self, attack, entity, target):
@@ -114,6 +114,11 @@ class AttackAction(Action):
         if roll <= hit_chance: return True
         return False
 
+    def _get_animation(self, attack, target, entity):
+        animation_imgs = attack.animation_imgs
+        ox, oy = entity.x, entity.y
+        tx, ty = target.x, target.y
+
     #TODO: log text includes shields
     def _attack(self, attack, target, engine, entity):
         if not target.is_alive(): return
@@ -126,17 +131,17 @@ class AttackAction(Action):
         if not self._roll_hit(attack, entity, target):
             verb = 'miss' if entity is engine.player else 'misses'
             msg = f'{subj} {verb} {obj}.'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
             return
         dam = self._get_damage(attack, entity, target)
         target.combat.hit_points.take_damage(dam)
         verb = 'hit' if entity is engine.player else 'hits'
         if dam > 0:
             msg = f'{subj} {verb} {obj} for {dam} damage.'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
         else:
             msg = f'{subj} {verb} {obj} but does no damage.'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
         self._check_for_death(engine, target)
 
 
@@ -150,7 +155,7 @@ class MeleeAction(DirectedAction, AttackAction):
         target = engine.get_blocking_entity_at_xy(dest_x, dest_y)
         if target is None:
             msg = 'Nothing there.'
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
         else:
             for attack in entity.combat.melee_attacks:
                 self._attack(attack, target, engine, entity)
@@ -161,6 +166,8 @@ class RangedAction(AttackAction):
         target = entity.target
         for attack in entity.combat.ranged_attacks:
             self._attack(attack, target, engine, entity)
+        animation = self._get_animation(attack, target, entity)
+        engine.display_manager.animation_manager.animations.append(animation)
         engine.event_handler.actions.append(CancelTargetAction())
 
 
@@ -183,7 +190,7 @@ class ReticuleAction(Action):
 
     def _create_reticule(self, x, y, engine):
         reticule = Reticule(x, y)
-        engine.viewport.reticule = reticule
+        engine.display_manager.viewport.reticule = reticule
 
     def perform(self, engine, entity):
         raise NotImplementedError()
@@ -197,13 +204,13 @@ class MoveReticuleAction(ReticuleAction):
         self.dy = dy
 
     def perform(self, engine, entity):
-        if not engine.viewport.reticule:
+        if not engine.display_manager.viewport.reticule:
             x, y = entity.x, entity.y
             self._create_reticule(x, y, engine)
             engine.event_handler.actions.append(MoveReticuleAction(0, 0))
             engine.push_event_handler(eh.InspectEventHandler())
             return
-        reticule = engine.viewport.reticule
+        reticule = engine.display_manager.viewport.reticule
         reticule.x += self.dx
         reticule.y += self.dy
         entities = engine.get_entities_at_xy(reticule.x, reticule.y,
@@ -211,14 +218,14 @@ class MoveReticuleAction(ReticuleAction):
         entities = engine._get_render_sorted_entities(entities)
         if entities:
             target = entities[0]
-            engine.gui.target_display.target = target
+            engine.display_manager.gui.target_display.target = target
             if (isinstance(engine.event_handler, eh.TargetEventHandler) and
                 (isinstance(target, Actor) and target.ai and
                  isinstance(target.ai, HostileEnemy))):
                 entity.target = target
         else:
             entity.target = None
-            engine.gui.target_display.target = None
+            engine.display_manager.gui.target_display.target = None
 
 
 class NextTargetAction(ReticuleAction):
@@ -227,7 +234,7 @@ class NextTargetAction(ReticuleAction):
         tgts = engine.get_dist_sorted_entities(tgts)
         if not tgts:
             return
-        elif (engine.viewport.reticule is None and
+        elif (engine.display_manager.viewport.reticule is None and
              not entity.combat.ranged_attacks):
             return
         if entity.target:
@@ -235,10 +242,10 @@ class NextTargetAction(ReticuleAction):
         else:
             target = tgts[0]
         entity.target = target
-        engine.gui.target_display.target = target
-        if engine.viewport.reticule:
-            engine.viewport.reticule.x = target.x
-            engine.viewport.reticule.y = target.y
+        engine.display_manager.gui.target_display.target = target
+        if engine.display_manager.viewport.reticule:
+            engine.display_manager.viewport.reticule.x = target.x
+            engine.display_manager.viewport.reticule.y = target.y
         else:
             self._create_reticule(target.x, target.y, engine)
             engine.push_event_handler(eh.TargetEventHandler())
@@ -246,7 +253,7 @@ class NextTargetAction(ReticuleAction):
 
 class InspectUnderReticuleAction(ReticuleAction):
     def perform(self, engine, entity):
-        target = engine.gui.target_display.target
+        target = engine.display_manager.gui.target_display.target
         if target:
             engine.event_handler.actions.append(InspectEntity(target))
 
@@ -257,8 +264,8 @@ class CancelTargetAction(Action):
 
     def perform(self, engine, entity):
         entity.target = None
-        engine.gui.target_display.target = None
-        engine.viewport.reticule = None
+        engine.display_manager.gui.target_display.target = None
+        engine.display_manager.viewport.reticule = None
         engine.pop_event_handler()
 
 
@@ -272,14 +279,14 @@ class PickupAction(Action):
                 inventory.pickup(item)
                 engine.entities.remove(item)
                 msg = f"You pickup {item.name}."
-                engine.gui.log.add_message(msg)
+                engine.add_log_msg(msg)
             else:
                 msg = f"There's no room for {item.name}."
-                engine.gui.log.add_message(msg)
+                engine.add_log_msg(msg)
                 engine.no_turn_taken = True
         else:
             msg = "There's nothing to pick up here."
-            engine.gui.log.add_message(msg)
+            engine.add_log_msg(msg)
             engine.no_turn_taken = True
 
 
@@ -309,7 +316,7 @@ class ConsumeItem(SelectInventoryItem):
     def _perform(self, engine, entity, item):
         item.use()
         msg = f"You use a {item.name}."
-        engine.gui.log.add_message(msg)
+        engine.add_log_msg(msg)
         entity.inventory.items[self.selection] = None
         engine.event_handler.actions.append(CloseMenuAction())
 
@@ -324,7 +331,7 @@ class DropItem(SelectInventoryItem):
         item.y = entity.y
         engine.entities.add(item)
         msg = f"You drop {item.name}."
-        engine.gui.log.add_message(msg)
+        engine.add_log_msg(msg)
         engine.event_handler.actions.append(CloseMenuAction())
 
 
@@ -344,7 +351,7 @@ class EquipItem(SelectInventoryItem):
         entity.equipment.equip_to_slot(slot, item)
         msg = f'You equip {item.name}.'
         item.name += ' (equipped)'
-        engine.gui.log.add_message(msg)
+        engine.add_log_msg(msg)
         engine.event_handler.actions.append(CloseMenuAction())
 
 
@@ -362,7 +369,7 @@ class UnequipItem(SelectInventoryItem):
         entity.equipment.unequip_from_slot(slot, item)
         item.name = item.name[:-11]
         msg = f'You unequip {item.name}.'
-        engine.gui.log.add_message(msg)
+        engine.add_log_msg(msg)
         if self.close_menu:
             engine.event_handler.actions.append(CloseMenuAction())
 
@@ -372,7 +379,7 @@ class CloseMenuAction(Action):
         self.time_units = 0
 
     def perform(self, engine, entity):
-        engine.gui.menus.pop()
+        engine.display_manager.gui.menus.pop()
         engine.pop_event_handler()
 
 
@@ -383,7 +390,8 @@ class OpenMenuAction(Action):
     def _create_menu(self, engine, w, h, dx, dy, title, menu_items):
         x = (config.SCREEN_WIDTH - w) // 2 + dx
         y = (config.SCREEN_HEIGHT - h) // 2 + dy
-        engine.gui.menus.append(MenuDisplay(x, y, w, h, title, menu_items))
+        menu = MenuDisplay(x, y, w, h, title, menu_items)
+        engine.display_manager.gui.menus.append(menu)
         engine.push_event_handler(self.event_handler)
 
     def perform(self, engine, entity):

@@ -5,17 +5,23 @@ from tiles import AutoDoor
 
 class Engine:
     def __init__(self, event_handler, game_map, player, entities, fov,
-                 viewport, gui):
+                 display_manager):
         self.event_handler = event_handler
         self.event_handlers = [event_handler]
         self.game_map = game_map
         self.player = player
         self.entities = entities
         self.fov = fov 
-        self.viewport = viewport
-        self.gui = gui 
-        self.gui.update(self.player)
+        self.display_manager = display_manager
+        self.display_manager.gui.update(self.player)
         self._update()
+
+    def add_log_msg(self, msg):
+        self.display_manager.gui.log.add_message(msg)
+
+    def toggle_fps(self):
+        gui = self.display_manager.gui
+        gui.show_fps = False if gui.show_fps else True
 
     def get_dist_sorted_entities(self, entities):
         key = lambda x: max(abs(self.player.x - x.x), abs(self.player.y - x.y))
@@ -43,15 +49,14 @@ class Engine:
             tile.ai.update(self)
         self._update_fov()
         self.player.combat.tick()
-        self.gui.update(self.player)
+        self.display_manager.gui.update(self.player)
 
     def _get_render_sorted_entities(self, entities):
         return sorted(entities, key=lambda x: -x.render_order)
 
     def render(self):
         entities = self._get_render_sorted_entities(self.entities)
-        self.viewport.render(self.game_map, entities, self.player)
-        self.gui.render()
+        self.display_manager.render(self.game_map, entities, self.player)
         blt.refresh()
 
     def get_entities_at_xy(self, x, y, visible=False):

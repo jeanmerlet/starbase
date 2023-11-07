@@ -4,7 +4,20 @@ import config
 import time
 
 
+class DisplayManager:
+    def __init__(self, viewport, gui, animation_manager):
+        self.viewport = viewport
+        self.gui = gui
+        self.animation_manager = animation_manager
+
+    def render(self, game_map, entities, player):
+        self.viewport.render(game_map, entities, player)
+        self.gui.render()
+        self.animation_manager.render()
+
+
 #TODO: doors as entities with transparency over floor tile when open
+#TODO: shadows as its own map layer that is displayed as np blt array
 class Viewport:
     def __init__(self, x, y, w, h):
         self.x, self.y = x, y
