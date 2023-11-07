@@ -153,14 +153,14 @@ class AttackAction(Action):
     #TODO: log text includes shields
     def _attack(self, attack, x, y, engine, entity, roll_hit=True):
         for target in self._get_targets(x, y, attack.area, engine):
+            if target is None: continue
+            if not target.is_alive(): continue
             if entity is engine.player:
                 subj = 'You'
                 obj = f'the {target.name}'
             else:
                 subj = f'The {entity.name}'
                 obj = 'you'
-            if target is None: continue
-            if not target.is_alive(): continue
             if roll_hit and not self._roll_hit(attack, entity, target):
                 verb = 'miss' if entity is engine.player else 'misses'
                 msg = f'{subj} {verb} {obj}.'
@@ -208,6 +208,7 @@ class ThrowAction(AttackAction):
         self._attack(self.item, x, y, engine, entity, False)
         slot = entity.inventory.get_slot_from_item(self.item)
         entity.inventory.items[slot] = None
+        entity.inventory.reset_slots(slot)
 
 
 class CheckAction(DirectedAction):
@@ -287,9 +288,8 @@ class CreateWeaponReticule(CreateReticule):
             area = attack.area
         tgts = engine.get_hostile_ents_visible_from_xy(entity.x, entity.y)
         tgts = engine.get_dist_sorted_entities(tgts)
-        max_range = self.weapon.max_range
         if not tgts:
-            return
+            target = entity
         else:
             new_target = tgts[0]
             x, y = new_target.x, new_target.y
@@ -427,6 +427,7 @@ class InjectItem(SelectInventoryItem):
         engine.add_log_msg(msg)
         item.use()
         entity.inventory.items[self.selection] = None
+        entity.inventory.reset_slots(self.selection)
         engine.event_handler.actions.append(CloseMenuAction())
 
 

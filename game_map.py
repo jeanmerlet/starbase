@@ -110,7 +110,8 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.5, 0, 0, 0, 0, 0, 0, 0.5]
+        #dist = [0.5, 0, 0, 0, 0, 0.5, 0, 0]
+        dist = [0.5, 0, 0, 0, 0, 0, 0.25, 0.25]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -216,7 +217,7 @@ class Map:
     def _spawn_equippable(self, name, props, x, y):
         entity = Equippable(name, x, y, props['char'], props['color'],
                             props['graphic'], props['att_type'],
-                            props['max_range]'], props['area'],
+                            props['range'], props['area'],
                             props['damage'], props['dam_type'],
                             props['shp_bonus'], props['scr_bonus'],
                             props['scd_bonus'], props['slot_type'])

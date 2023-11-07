@@ -127,13 +127,16 @@ class Inventory:
         free_slots.sort()
         self.next_slot = free_slots[0]
 
+    def reset_slots(self, slot):
+        if ord(slot) < ord(self.next_slot): self.next_slot = slot
+
     def drop(self, item):
         for key, value in self.items.items():
             if value == item:
                 slot = key
         self.items[slot] = None
         item.owner = None
-        if ord(slot) < ord(self.next_slot): self.next_slot = slot
+        self.reset_slots(slot)
 
     def is_full(self):
         if self.size > len([k for k in self.items.keys() if self.items[k]]):
