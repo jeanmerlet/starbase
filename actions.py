@@ -572,8 +572,10 @@ class OpenInventoryMenu(OpenMenuAction):
         for slot, item in inventory.items.items():
             if item is None: continue
             if self._item_is_valid(item):
+                img = f'{item.icon}'
                 text = f'{slot}. [color={item.color}]{item.name}[/color]'
-                menu_items.append(text)
+                #menu_items.append(f'{img}{text}')
+                menu_items.append((img, text))
         return menu_items
 
     def perform(self, engine, entity):

@@ -33,6 +33,7 @@ def set_blt_settings():
     font = 'Saira'
     blt.set(f'font: ./fonts/{font}-Regular.ttf, size=24, spacing=4x2')
     blt.set(f'gui font: ./fonts/{font}-Regular.ttf, size=12')
+    blt.set(f'menu font: ./fonts/{font}-Regular.ttf, size=12, align=top-left')
     blt.set(f'bold_gui font: ./fonts/{font}-Bold.ttf, size=11')
 
     blt.set('0xE000: ./graphics/reticule.png, spacing=4x2')

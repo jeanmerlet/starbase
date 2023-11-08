@@ -232,11 +232,15 @@ class MenuDisplay(Display):
         self._render_border()
         self.y += 1
         blt.print(self.x + 4, self.y + 1, f'[font=gui]{self.menu_title}')
-        self.y += 1
+        self.y += 2
         menu_idx = list(map(chr, range(97, 123)))
-        for item in self.menu_items:
-            blt.print(self.x + 4, self.y, f'[font=gui]{item}')
-            self.y += 1
+        for img, item in self.menu_items:
+            blt.composition(1)
+            blt.print(self.x + 4, self.y, '[0xE001]')
+            blt.print(self.x + 4, self.y, img)
+            blt.composition(0)
+            blt.print(self.x + 9, self.y, f'[font=menu]{item}')
+            self.y += 2
 
 
 class GUI:
