@@ -19,8 +19,8 @@ VIEWPORT_HEIGHT = 48
 SIDE_PANEL_WIDTH = 22
 VERT_PANEL_HEIGHT = 6
 
-INVENTORY_WIDTH = 58
-INVENTORY_HEIGHT = 29
+INVENTORY_WIDTH = 80
+INVENTORY_HEIGHT = 30
 
 TARGETY = 10
 
@@ -43,8 +43,17 @@ def set_blt_settings():
     blt.set('0xE005: ./graphics/basic_shield_belt.png, spacing=4x2')
     blt.set('0xE006: ./graphics/blaster.png, spacing=4x2')
     blt.set('0xE007: ./graphics/skitterling.png, spacing=4x2')
-    blt.set('0xE008: ./graphics/marine.png, spacing=4x2')
-    blt.set('0xE009: ./graphics/frag_grenade.png, spacing=4x2')
+    blt.set('0xE008: ./graphics/skitterling_corpse.png, spacing=4x2')
+    blt.set('0xE009: ./graphics/marine.png, spacing=4x2')
+    blt.set('0xE010: ./graphics/frag_grenade.png, spacing=4x2')
+    blt.set('0xE011: ./graphics/menu_border_nw.png, spacing=4x2')
+    blt.set('0xE012: ./graphics/menu_border_n.png, spacing=4x2')
+    blt.set('0xE013: ./graphics/menu_border_ne.png, spacing=4x2')
+    blt.set('0xE014: ./graphics/menu_border_e.png, spacing=4x2')
+    blt.set('0xE015: ./graphics/menu_border_se.png, spacing=4x2')
+    blt.set('0xE016: ./graphics/menu_border_s.png, spacing=4x2')
+    blt.set('0xE017: ./graphics/menu_border_sw.png, spacing=4x2')
+    blt.set('0xE018: ./graphics/menu_border_w.png, spacing=4x2')
 
     blt.set('palette.shade = 200,0,0,0')
     blt.set('palette.ret_blue = 0,76,153')

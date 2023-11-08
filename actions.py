@@ -247,7 +247,6 @@ class CreateReticule(ReticuleAction):
         raise NotImplementedError()
 
 
-#TODO: different reticule color when inspecting (blue) vs. targetting (red)
 class CreateInspectReticule(CreateReticule):
     def perform(self, engine, entity):
         x, y = entity.x, entity.y
@@ -314,14 +313,31 @@ class MoveReticule(ReticuleAction):
         x, y = reticule.x, reticule.y
         tx, ty = x + self.dx, y + self.dy
         max_range = reticule.max_range
-        if not self._is_in_range(entity, tx, ty, max_range):
-            return
         px, py = engine.player.x, engine.player.y
+        if not self._is_in_range(entity, tx, ty, max_range):
+            if self.dx == 0:
+                dx = 1 if x < px else -1
+                if not self._is_in_range(entity, x + dx, ty, max_range):
+                    dy = 0
+                else:
+                    dy = self.dy
+            elif self.dy == 0:
+                dy = 1 if y < py else -1
+                if not self._is_in_range(entity, tx, y + dy, max_range):
+                    dx = 0
+                else:
+                    dx = self.dx
+            else:
+                dx, dy = self.dx, self.dy
+            tx, ty = x + dx, y + dy
+            if not self._is_in_range(entity, tx, ty, max_range):
+                return
+        viewport = engine.display_manager.viewport
         viewport = engine.display_manager.viewport
         if px - (viewport.w // 2) <= tx < px + (viewport.w // 2):
-            reticule.x += self.dx
+            reticule.x = tx
         if py - (viewport.h // 2) <= ty < py + (viewport.h // 2):
-            reticule.y += self.dy
+            reticule.y = ty
         entities = engine.get_entities_at_xy(reticule.x, reticule.y,
                                              visible=True)
         entities = engine._get_render_sorted_entities(entities)
@@ -527,7 +543,7 @@ class InspectEntity(OpenMenuAction):
     def perform(self, engine, entity):
         w = config.INVENTORY_WIDTH
         h = config.INVENTORY_HEIGHT
-        dx, dy = 2, 2
+        dx, dy = 4, 2
         color, name = self.entity.color, self.entity.name.capitalize()
         title = f'[color={color}]{name}[/color]'
         menu_items = self.entity.get_stats()

@@ -111,7 +111,7 @@ class Map:
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
         #dist = [0.5, 0, 0, 0, 0, 0.5, 0, 0]
-        dist = [0.5, 0, 0, 0, 0, 0, 0.25, 0.25]
+        dist = [0.5, 0, 0, 0, 0, 0, 0, 0.5]
         idx = np.arange(len(dist))
         name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
         return name_set
@@ -189,9 +189,13 @@ class Map:
         melee, ranged = props['melee'], props['ranged']
         evasion = props['evasion']
         skills = self._create_actor_skills(melee, ranged, evasion)
+        if pd.isna(props['corpse_graphic']):
+            corpse_graphic = None
+        else:
+            corpse_graphic = props['corpse_graphic']
         entity = Actor(name, x, y, props['char'], props['color'],
                        props['graphic'], combat, ai, fov_radius, inventory,
-                       equipment, attributes, skills)
+                       equipment, attributes, skills, corpse_graphic)
         entity.ai.entity = entity
         entity.combat.entity = entity
         entity.equipment.entity = entity
@@ -264,9 +268,10 @@ class Map:
         attributes = self._create_actor_attributes(5, 5, 5, 5)
         skills = self._create_actor_skills(50, 50, 10)
         player = Actor(name='player', x=startx, y=starty, char='@',
-                       color='amber', graphic='[0xE008]', combat=combat, ai=ai,
+                       color='amber', graphic='[0xE009]', combat=combat, ai=ai,
                        fov_radius=7, inventory=inventory, equipment=equipment,
-                       attributes=attributes, skills=skills)
+                       attributes=attributes, skills=skills,
+                       corpse_graphic=None)
         player.ai.entity = player
         player.combat.entity = player
         player.inventory.entity = player

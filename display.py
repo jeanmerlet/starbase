@@ -28,8 +28,6 @@ class Viewport:
         self.dark_tile = '[color=shade]\u2592[\color]'
 
     def render(self, game_map, entities, player):
-        blt.layer(2)
-        blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         blt.layer(0)
         blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         px, py = player.x, player.y
@@ -40,9 +38,9 @@ class Viewport:
                 if game_map.in_bounds(x, y) and game_map.explored[x, y]:
                     blt.print(i*4, j*2, game_map.tiles[x, y].tile)
                     if not game_map.visible[x, y]:
-                        blt.layer(2)
+                        blt.composition(1)
                         blt.print(i*4, j*2, self.dark_tile)
-                        blt.layer(0)
+                        blt.composition(0)
         blt.layer(1)
         blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         for ent in entities:
@@ -52,7 +50,6 @@ class Viewport:
                 blt.print(x*4, y*2, ent.icon)
         if self.reticule:
             self.reticule.render(self.x_off, self.y_off, px, py)
-        blt.layer(0)
 
 
 class Reticule:
@@ -72,6 +69,7 @@ class Reticule:
     
 
     def render(self, x_off, y_off, px, py):
+        blt.layer(0)
         x = x_off - (px - self.x)
         y = y_off - (py - self.y)
         blt.composition(1)
@@ -109,6 +107,7 @@ class TargetDisplay(Display):
         self.target = None
 
     def render(self):
+        blt.layer(0)
         blt.clear_area(self.x, self.y, 20, 1)
         target = self.target
         if target:
@@ -138,6 +137,7 @@ class BarDisplay(Display):
         #self.text = f'{self.name}: {self.value} / {self.max_value}'
 
     def render(self):
+        blt.layer(0)
         blt.clear_area(self.x, self.y, self.max_length, 2)
         if self.max_value > 0:
             blt.print(self.x, self.y, f'[font=bold_gui]{self.name}')
@@ -181,6 +181,7 @@ class LogDisplay(Display):
 
     def render(self):
         self.y = self.orig_y
+        blt.layer(0)
         blt.clear_area(self.x, self.y, self.w, self.h)
         wrapped_msgs = []
         for msg in self.msgs[-self.h:]:
@@ -195,33 +196,46 @@ class MenuDisplay(Display):
     def __init__(self, x, y, w, h, menu_title, menu_items):
         super().__init__(x, y)
         self.orig_y = y
-        self.w, self.h = w, h
+        self.w, self.h = w // 4, h // 2
         self.menu_title = menu_title
         self.menu_items = menu_items
         self.border_tile = '[font=gui][color=menu_border]\u2588[/color]'
+        self.border_tile_nw = '[0xE011]'
+        self.border_tile_n = '[0xE012]'
+        self.border_tile_ne = '[0xE013]'
+        self.border_tile_e = '[0xE014]'
+        self.border_tile_se = '[0xE015]'
+        self.border_tile_s = '[0xE016]'
+        self.border_tile_sw = '[0xE017]'
+        self.border_tile_w = '[0xE018]'
 
     def _render_border(self):
-        blt.print(self.x, self.y, self.border_tile * (self.w + 1))
-        for y in range(self.h - 2):
-            blt.print(self.x, self.y + y + 1, self.border_tile * 2)
-            blt.print(self.x + self.w - 1, self.y + y + 1, self.border_tile * 2)
-        blt.print(self.x, self.y + self.h - 1, self.border_tile * (self.w + 1))
+        blt.composition(1)
+        blt.print(self.x, self.y, self.border_tile_nw)
+        blt.print(self.x + self.w*4, self.y, self.border_tile_ne)
+        blt.print(self.x + self.w*4, self.y + self.h*2, self.border_tile_se)
+        blt.print(self.x, self.y + self.h*2, self.border_tile_sw)
+        for i in range(1, self.w):
+            blt.print(self.x + i*4, self.y, self.border_tile_n)
+            blt.print(self.x + i*4, self.y + self.h*2, self.border_tile_s)
+        for j in range(1, self.h):
+            blt.print(self.x, self.y + j*2, self.border_tile_w)
+            blt.print(self.x + self.w*4, self.y + j*2, self.border_tile_e)
+        blt.composition(0)
 
     def render(self):
         self.y = self.orig_y
-        blt.clear_area(self.x - 1, self.y, self.w, self.h)
         blt.layer(1)
-        blt.clear_area(self.x - 1, self.y, self.w, self.h)
-        blt.layer(2)
-        blt.clear_area(self.x - 1, self.y, self.w, self.h)
+        blt.clear_area(self.x, self.y, self.w*4, self.h*2)
         blt.layer(0)
+        blt.clear_area(self.x + 4, self.y + 2, self.w*4 - 4, self.h*2 - 2)
         self._render_border()
         self.y += 1
-        blt.print(self.x + 2, self.y, f'[font=gui]{self.menu_title}')
+        blt.print(self.x + 4, self.y + 1, f'[font=gui]{self.menu_title}')
         self.y += 1
         menu_idx = list(map(chr, range(97, 123)))
         for item in self.menu_items:
-            blt.print(self.x + 2, self.y, f'[font=gui]{item}')
+            blt.print(self.x + 4, self.y, f'[font=gui]{item}')
             self.y += 1
 
 

@@ -25,7 +25,8 @@ class Entity:
 
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, graphic, combat, ai,
-                 fov_radius, inventory, equipment, attributes, skills):
+                 fov_radius, inventory, equipment, attributes, skills,
+                 corpse_graphic):
         super().__init__(name, x, y, char, color, graphic, blocking=True,
                          render_order=0)
         self.combat = combat
@@ -35,6 +36,7 @@ class Actor(Entity):
         self.equipment = equipment
         self.attributes = attributes
         self.skills = skills
+        self.corpse_graphic = corpse_graphic
 
     def move(self, dx, dy):
         self.x += dx
@@ -47,7 +49,10 @@ class Actor(Entity):
         self.name = f'{self.name} corpse'
         self.char = '%'
         self.color = 'dark red'
-        self.icon = '[color=dark red]%'
+        if self.corpse_graphic:
+            self.icon = self.corpse_graphic
+        else:
+            self.icon = '[color=dark red]%'
         self.blocking = False
         self.ai = None
         self.render_order = 2
