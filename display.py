@@ -224,9 +224,9 @@ class MenuDisplay(Display):
     def render(self, layer):
         self.y = self.orig_y
         blt.layer(0)
-        blt.clear_area(self.x + cfg.xs, self.y + cfg.ys, self.w*cfg.xs, self.h*cfg.ys)
+        blt.clear_area(self.x + cfg.xs, self.y + cfg.ys, (self.w-1)*cfg.xs, (self.h-1)*cfg.ys)
         blt.layer(1)
-        blt.clear_area(self.x + cfg.xs, self.y + cfg.ys, self.w*cfg.xs, self.h*cfg.ys)
+        blt.clear_area(self.x + cfg.xs, self.y + cfg.ys, (self.w-1)*cfg.xs, (self.h-1)*cfg.ys)
         blt.layer(layer - 1)
         blt.clear_area(self.x + cfg.xs, self.y + cfg.ys, self.w*cfg.xs, self.h*cfg.ys)
         blt.layer(layer)
