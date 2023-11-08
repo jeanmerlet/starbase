@@ -497,7 +497,6 @@ class UnequipItem(SelectInventoryItem):
         self.close_menu = close_menu
 
     def _is_valid_item(self, item, entity):
-        print(item.equipped)
         return isinstance(item, Equippable) and item.equipped
 
     def _perform(self, engine, entity, item):
@@ -515,7 +514,7 @@ class CloseMenuAction(Action):
         self.time_units = 0
 
     def perform(self, engine, entity):
-        engine.display_manager.gui.menus.pop()
+        engine.display_manager.gui.pop_menu()
         engine.pop_event_handler()
 
 
@@ -546,7 +545,12 @@ class InspectEntity(OpenMenuAction):
         dx, dy = 4, 2
         color, name = self.entity.color, self.entity.name.capitalize()
         title = f'[color={color}]{name}[/color]'
-        menu_items = self.entity.get_stats()
+        #img = f'{self.entity.icon}[resize=64x64]'
+        img = f'{self.entity.icon}'
+        menu_items = []
+        stats = self.entity.get_stats()
+        for stat in stats:
+            menu_items.append((img, stat))
         self._create_menu(engine, w, h, dx, dy, title, menu_items)
 
 
@@ -574,7 +578,6 @@ class OpenInventoryMenu(OpenMenuAction):
             if self._item_is_valid(item):
                 img = f'{item.icon}'
                 text = f'{slot}. [color={item.color}]{item.name}[/color]'
-                #menu_items.append(f'{img}{text}')
                 menu_items.append((img, text))
         return menu_items
 
