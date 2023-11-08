@@ -258,6 +258,7 @@ class GUI:
         self.menus = []
         self.target_display = TargetDisplay(hpx, config.TARGETY)
         self.show_fps = False
+        self.last_fps = 0
         self.last_time = time.time()
 
     def render(self):
@@ -271,7 +272,11 @@ class GUI:
         if self.show_fps:
             blt.clear_area(1, 1, 8, 1)
             fps = 1 // (time.time() - self.last_time)
-            blt.print(1, 1, f'[font=gui]fps: {fps}')
+            if abs(fps - self.last_fps) > 5:
+                blt.print(1, 1, f'[font=gui]fps: {fps}')
+                self.last_fps = fps
+            else:
+                blt.print(1, 1, f'[font=gui]fps: {self.last_fps}')
             self.last_time = time.time()
 
     def update(self, player):
