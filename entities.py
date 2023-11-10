@@ -23,6 +23,7 @@ class Entity:
     def get_stats(self):
         return [f'This is a nice looking {self.name}']
 
+
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, graphic, combat, ai,
                  fov_radius, inventory, equipment, attributes, skills,

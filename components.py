@@ -2,6 +2,27 @@ import numpy as np
 import helper_functions as hf
 
 
+class Level:
+    def __init__(self, level, max_level, xp, nl_xp, xp_mult):
+        self.level = level
+        self.max_level = max_level
+        self.xp = xp
+        self.nl_xp = nl_xp
+        self.xp_mult = xp_mult
+
+    def _level(self):
+        self.level += 1
+        self.nl_xp += self.nl_xp * xp_mult
+
+    def add_xp(self, xp):
+        if self.level < self.max_level:
+            self.xp += xp
+            if self.xp >= self.nl_xp:
+                self._level()
+        else:
+            xp = 'max'
+
+
 class Combat:
     def __init__(self, hit_points, shields, melee_attacks, ranged_attacks):
         self.hit_points = hit_points

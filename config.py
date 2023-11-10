@@ -24,10 +24,6 @@ INVENTORY_HEIGHT = 30
 
 TARGETY = 10
 
-xs = 8
-ys = 4
-size = '64x64'
-
 xs = 4
 ys = 2
 size = '32x32'
