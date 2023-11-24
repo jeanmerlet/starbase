@@ -13,7 +13,9 @@ BLOCK_SIZE = 20
 SCREEN_WIDTH = 160
 SCREEN_HEIGHT = 54
 
-VIEWPORT_WIDTH = 138
+#VIEWPORT_WIDTH = 138
+#VIEWPORT_HEIGHT = 48
+VIEWPORT_WIDTH = 134
 VIEWPORT_HEIGHT = 48
 
 SIDE_PANEL_WIDTH = 22
@@ -24,9 +26,12 @@ INVENTORY_HEIGHT = 30
 
 TARGETY = 10
 
-xs = 4
-ys = 2
-size = '32x32'
+#xs = 4
+#ys = 2
+#size = '32x32'
+xs = 8
+ys = 4
+size = '64x64'
 
 # blt
 def set_blt_settings():

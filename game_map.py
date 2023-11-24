@@ -287,4 +287,6 @@ class Map:
         player.equipment.update_actor_stats()
         for name, skill in player.skills.items():
             skill.entity = player
+        level = Level(1, 10, 0, 1000, 1.5)
+        player.level = level
         return player

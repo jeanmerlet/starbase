@@ -22,8 +22,8 @@ class Viewport:
     def __init__(self, x, y, w, h):
         self.x, self.y = x, y
         self.w, self.h = w // cfg.xs, h // cfg.ys
-        self.x_off = self.w // cfg.ys
-        self.y_off = self.h // cfg.ys
+        self.x_off = self.w // 2
+        self.y_off = self.h // 2
         self.reticule = None
         self.dark_tile = '[color=shade]\u2592[\\color]'
 
