@@ -110,10 +110,18 @@ class Map:
         # make another csv table for these sets
         # Use a rarity property for items.
         if np.random.rand() < 0.25: return None
-        dist = [0.5, 0, 0, 0, 0, 0.5, 0, 0]
-        #dist = [0.5, 0, 0, 0, 0, 0, 0, 0.5]
-        idx = np.arange(len(dist))
-        name_set = np.random.choice(self.ENT_DATA.index, size=1, p=dist)
+        num_dist = [(1, 4), (1, 1), 0, 0, 0, 0, 0, 0]
+        dist = [0.5, 0, 0, 0, 0.075, 0.075, 0.15, 0.2]
+        #idx = np.arange(len(dist))
+        idx = np.random.choice(np.arange(len(dist)), p=dist)
+        num_range = num_dist[idx]
+        if num_range != 0:
+            min_num, max_num = num_range
+            num = np.random.randint(min_num, max_num + 1)
+        else:
+            num = 1
+        #name_set = [np.random.choice(self.ENT_DATA.index, p=dist)] * num
+        name_set = [self.ENT_DATA.index[idx]] * num
         return name_set
 
     def _roll_entity_xy(self, room, entities):

@@ -16,9 +16,9 @@ class EventHandler:
         for action in self.actions:
             action.perform(engine, player)
             self.timer += action.time_units
-        if self.timer >= 1000:
-            engine.handle_nonplayer_turns()
-            self.timer -= 1000
+            if self.timer >= 1000:
+                engine.handle_nonplayer_turns()
+                self.timer -= 1000
 
     def _dispatch(self, event, engine):
         raise NotImplementedError()

@@ -106,7 +106,10 @@ class Equippable(Item):
         super().__init__(name, x, y, char, color, graphic)
         self.att_type = att_type
         self.max_range = float(max_range)
-        self.area = int(area)
+        if not pd.isnull(area):
+            self.area = int(area)
+        else:
+            self.area = None
         self.damage = damage
         self.damage_type = damage_type
         self.shp_bonus = shp_bonus

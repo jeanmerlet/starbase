@@ -25,7 +25,7 @@ class Viewport:
         self.x_off = self.w // cfg.ys
         self.y_off = self.h // cfg.ys
         self.reticule = None
-        self.dark_tile = '[color=shade]\u2592[\color]'
+        self.dark_tile = '[color=shade]\u2592[\\color]'
 
     def render(self, game_map, entities, player):
         blt.layer(0)

@@ -96,10 +96,9 @@ class DeathAction(Action):
         if self.target is engine.player:
             engine.push_event_handler(eh.GameOverEventHandler())
             msg = 'You have DIED.'
-            engine.add_log_msg(msg)
         else:
             msg = f'The {self.target.name} dies.'
-            engine.add_log_msg(msg)
+        engine.add_log_msg(msg)
         self.target.die()
 
 
@@ -155,6 +154,7 @@ class AttackAction(Action):
         for target in self._get_targets(x, y, attack.area, engine):
             if target is None: continue
             if not target.is_alive(): continue
+            if attack.area == 0 and target == entity: continue
             if entity is engine.player:
                 subj = 'You'
                 obj = f'the {target.name}'
