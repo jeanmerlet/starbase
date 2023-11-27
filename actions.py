@@ -94,8 +94,8 @@ class DeathAction(Action):
 
     def perform(self, engine, entity):
         if self.target is engine.player:
-            engine.push_event_handler(eh.GameOverEventHandler())
             msg = 'You have DIED.'
+            engine.push_event_handler(eh.GameOverEventHandler())
         else:
             msg = f'The {self.target.name} dies.'
         engine.add_log_msg(msg)

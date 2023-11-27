@@ -14,8 +14,10 @@ class Map:
         2: AutoDoor,
         3: AutoDoor
     }
-    ENT_DATA = pd.read_csv('./data/entities.tsv', sep='\t', index_col=0,
-                           header=0)
+    ACTOR_DATA = pd.read_csv('./data/actors.tsv', sep='\t', index_col=0,
+                             header=0)
+    ITEM_DATA = pd.read_csv('./data/items.tsv', sep='\t', index_col=0,
+                             header=0)
 
     def __init__(self, width, height):
         self.width = width
@@ -104,15 +106,13 @@ class Map:
                 else:
                     checked[x, y] = True
 
-    def _roll_entities(self):
-        #TODO: get sets of entities larger than size 1
-        # (e.g. multiple skitterlings or robot and kevlar)
-        # make another csv table for these sets
-        # Use a rarity property for items.
-        if np.random.rand() < 0.25: return None
-        num_dist = [(1, 4), (1, 1), 0, 0, 0, 0, 0, 0]
-        dist = [0.5, 0, 0, 0, 0.075, 0.075, 0.15, 0.2]
-        #idx = np.arange(len(dist))
+    #TODO: get sets of entities larger than size 1
+    # (e.g. multiple skitterlings or robot and kevlar)
+    # make another csv table for these sets
+    # Use a rarity property for items.
+    def _roll_actors(self):
+        num_dist = [(1, 4), (1, 1)]
+        dist = [1, 0]
         idx = np.random.choice(np.arange(len(dist)), p=dist)
         num_range = num_dist[idx]
         if num_range != 0:
@@ -120,8 +120,13 @@ class Map:
             num = np.random.randint(min_num, max_num + 1)
         else:
             num = 1
-        #name_set = [np.random.choice(self.ENT_DATA.index, p=dist)] * num
-        name_set = [self.ENT_DATA.index[idx]] * num
+        name_set = [self.ACTOR_DATA.index[idx]] * num
+        return name_set
+
+    def _roll_items(self):
+        dist = [0, 0, 0.15, 0.15, 0.3, 0.4]
+        idx = np.random.choice(np.arange(len(dist)), p=dist)
+        name_set = [self.ITEM_DATA.index[idx]]
         return name_set
 
     def _roll_entity_xy(self, room, entities):
@@ -132,14 +137,20 @@ class Map:
         else:
             return x, y
 
-    def _get_entity_properties(self, name):
+    def _get_empty_adjacent_xy(self, room, entities, x, y):
+        adj_x = x + np.random.randint(-1, 2)
+        adj_y = y + np.random.randint(-1, 2)
+        if (isinstance(self.tiles[adj_x, adj_y], Wall) or
+            np.any([ent.x == adj_x and ent.y == adj_y for ent in entities])):
+                return self._get_empty_adjacent_xy(room, entities, x, y)
+        else:
+            return adj_x, adj_y
+
+    def _get_entity_properties(self, name, data):
         props = {}
-        for col in self.ENT_DATA.columns:
-            if col == 'class':
-                ent_class = self.ENT_DATA.loc[name, col]
-            else:
-                props[col] = self.ENT_DATA.loc[name, col]
-        return ent_class, props
+        for col in data.columns:
+            props[col] = data.loc[name, col]
+        return props
 
     def _get_actor_attacks(self, props):
         names = props['attacks'].split(',')
@@ -180,7 +191,7 @@ class Map:
         }
         return skills
 
-    def _spawn_actor(self, name, props, x, y):
+    def _spawn_actor(self, entities, name, props, x, y):
         hp = HitPoints(props['hp'], props['regen_rate'])
         shields = Shields(props['base_shp'], props['base_scr'],
                           props['base_scd'])
@@ -210,50 +221,55 @@ class Map:
         entity.equipment.update_actor_stats()
         for name, skill in entity.skills.items():
             skill.entity = entity
-        return entity
-
-    def _spawn_consumable(self, name, props, x, y):
-        subclass = props['subclass']
-        if subclass == 'injected':
-            entity = InjectedConsumable(name, x, y, props['char'],
-                                       props['color'], props['graphic'],
-                                       props['heal_amount'], props['verb'])
-        elif subclass == 'thrown':
-            entity = ThrownConsumable(name, x, y, props['char'],
-                                      props['color'], props['graphic'],
-                                      props['damage'], props['dam_type'],
-                                      props['range'], props['area'],
-                                      props['verb'])
-        return entity
-
-    def _spawn_equippable(self, name, props, x, y):
-        entity = Equippable(name, x, y, props['char'], props['color'],
-                            props['graphic'], props['att_type'],
-                            props['range'], props['area'],
-                            props['damage'], props['dam_type'],
-                            props['shp_bonus'], props['scr_bonus'],
-                            props['scd_bonus'], props['slot_type'])
-        return entity
-
-    def _spawn_entity(self, entities, room, name):
-        x, y = self._roll_entity_xy(room, entities)
-        ent_class, props = self._get_entity_properties(name)
-        if ent_class == 'actor':
-            entity = self._spawn_actor(name, props, x, y)
-        if ent_class == 'consumable':
-            entity = self._spawn_consumable(name, props, x, y)
-        elif ent_class == 'equippable':
-            entity = self._spawn_equippable(name, props, x, y)
         entities.add(entity)
+
+    def _spawn_item(self, entities, name, props, x, y):
+        if props['class'] == 'equippable':
+            entity = Equippable(name, x, y, props['char'], props['color'],
+                                props['graphic'], props['att_type'],
+                                props['range'], props['area'],
+                                props['damage'], props['dam_type'],
+                                props['shp_bonus'], props['scr_bonus'],
+                                props['scd_bonus'], props['slot_type'])
+        elif props['class'] == 'consumable':
+            subclass = props['subclass']
+            if subclass == 'injected':
+                entity = InjectedConsumable(name, x, y, props['char'],
+                                           props['color'], props['graphic'],
+                                           props['heal_amount'], props['verb'])
+            elif subclass == 'thrown':
+                entity = ThrownConsumable(name, x, y, props['char'],
+                                          props['color'], props['graphic'],
+                                          props['damage'], props['dam_type'],
+                                          props['range'], props['area'],
+                                          props['verb'])
+        entities.add(entity)
+
+    def _spawn_actors(self, entities, room, actors):
+        for i, actor in enumerate(actors):
+            props = self._get_entity_properties(actor, self.ACTOR_DATA)
+            if i == 0:
+                x, y = self._roll_entity_xy(room, entities)
+            else:
+                x, y = self._get_empty_adjacent_xy(room, entities, x, y)
+            self._spawn_actor(entities, actor, props, x, y)
+
+    def _spawn_items(self, entities, room, items):
+        for item in items:
+            props = self._get_entity_properties(item, self.ITEM_DATA)
+            x, y = self._roll_entity_xy(room, entities)
+            self._spawn_item(entities, item, props, x, y)
 
     def populate(self, entities):
         #TODO: modify size parameter
         for room in self.rooms:
             if isinstance(room, Hallway): continue
-            name_set = self._roll_entities()
-            if name_set is not None:
-                for name in name_set:
-                    self._spawn_entity(entities, room, name)
+            if np.random.rand() > 0.25:
+                actor_set = self._roll_actors()
+                self._spawn_actors(entities, room, actor_set)
+            if np.random.rand() > 0.5:
+                item_set = self._roll_items()
+                self._spawn_items(entities, room, item_set)
 
     def gen_map(self, gridw, gridh, block_size):
         grid = Grid(gridw, gridh, block_size)
