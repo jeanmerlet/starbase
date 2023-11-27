@@ -212,9 +212,10 @@ class Map:
             corpse_graphic = None
         else:
             corpse_graphic = props['corpse_graphic']
+        xp = props['xp']
         entity = Actor(name, x, y, props['char'], props['color'],
                        props['graphic'], combat, ai, fov_radius, inventory,
-                       equipment, attributes, skills, corpse_graphic)
+                       equipment, attributes, skills, corpse_graphic, xp)
         entity.ai.entity = entity
         entity.combat.entity = entity
         entity.equipment.entity = entity
@@ -295,7 +296,7 @@ class Map:
                        color='amber', graphic='[0xE009]', combat=combat, ai=ai,
                        fov_radius=7, inventory=inventory, equipment=equipment,
                        attributes=attributes, skills=skills,
-                       corpse_graphic=None)
+                       corpse_graphic=None, xp=0)
         player.ai.entity = player
         player.combat.entity = player
         player.inventory.entity = player

@@ -27,7 +27,7 @@ class Entity:
 class Actor(Entity):
     def __init__(self, name, x, y, char, color, graphic, combat, ai,
                  fov_radius, inventory, equipment, attributes, skills,
-                 corpse_graphic):
+                 corpse_graphic, xp):
         super().__init__(name, x, y, char, color, graphic, blocking=True,
                          render_order=0)
         self.combat = combat
@@ -38,6 +38,7 @@ class Actor(Entity):
         self.attributes = attributes
         self.skills = skills
         self.corpse_graphic = corpse_graphic
+        self.xp = int(xp)
 
     def move(self, dx, dy):
         self.x += dx

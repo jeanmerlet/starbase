@@ -87,7 +87,7 @@ class OpenDoorAction(DirectedAction):
         door.ai.open(engine)
 
 
-class DeathAction(Action):
+class KillAction(Action):
     def __init__(self, target):
         self.target = target
         self.time_units = 0
@@ -100,6 +100,8 @@ class DeathAction(Action):
             msg = f'The {self.target.name} dies.'
         engine.add_log_msg(msg)
         self.target.die()
+        if entity is engine.player:
+            entity.level.add_xp(self.target.xp)
 
 
 class AttackAction(Action):
@@ -109,9 +111,10 @@ class AttackAction(Action):
     def perform(self, engine, entity):
         raise NotImplementedError()
 
-    def _check_for_death(self, engine, target):
+    def _check_for_death(self, engine, entity, target):
         if not target.is_alive():
-            engine.event_handler.actions.append(DeathAction(target))
+            kill_action = KillAction(target)
+            kill_action.perform(engine, entity)
 
     def _damage(self, attack, entity, target, engine, subj, obj):
         dam = attack.roll_damage()
@@ -167,7 +170,7 @@ class AttackAction(Action):
                 engine.add_log_msg(msg)
                 continue
             self._damage(attack, entity, target, engine, subj, obj)
-            self._check_for_death(engine, target)
+            self._check_for_death(engine, entity, target)
 
 
 class MeleeAction(DirectedAction, AttackAction):
@@ -638,7 +641,7 @@ class DropMenu(OpenInventoryMenu):
         return 'Drop which item?'
 
     def _item_is_valid(self, item):
-        return not item.equipped
+        return not (isinstance(item, Equippable) and item.equipped)
 
 
 class EquipMenu(OpenInventoryMenu):
