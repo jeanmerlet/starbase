@@ -15,6 +15,7 @@ class Game:
         event_handler = MainEventHandler()
         game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
         game_map.gen_map(config.GRIDW, config.GRIDH, config.BLOCK_SIZE)
+        #game_map.generate_space_station()
         player = game_map.spawn_player()
         entities = {player}
         game_map.populate(entities)

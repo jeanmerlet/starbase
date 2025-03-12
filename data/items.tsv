@@ -3,5 +3,5 @@ kevlar body armor	equippable	None	[[	dark green	None	False	None	None	None	None	N
 plated kevlar body armor	equippable	None	[[	darker green	None	False	None	None	None	None	None	0	0	0	armor	None	None
 shield belt	equippable	None	]]	light blue	[0xE005]	False	None	None	None	None	None	9	3	3	shields	None	None
 laser pistol	equippable	None	/	dark red	[0xE006]	False	ranged	5	0	2d12	energy	0	0	0	weapon	None	None
-stimpack	consumable	injected	+	light red	None	False	None	None	None	None	None	None	None	None	None	10d2	inject
+stimpack	consumable	injected	+	light red	[0xE019]	False	None	None	None	None	None	None	None	None	None	10d2	inject
 frag. grenade	consumable	thrown	/	dark green	[0xE010]	False	None	5	2	8d6	explosive	None	None	None	None	None	throw

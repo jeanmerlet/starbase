@@ -12,9 +12,6 @@ BLOCK_SIZE = 20
 # display
 SCREEN_WIDTH = 160
 SCREEN_HEIGHT = 54
-
-#VIEWPORT_WIDTH = 138
-#VIEWPORT_HEIGHT = 48
 VIEWPORT_WIDTH = 134
 VIEWPORT_HEIGHT = 48
 
@@ -65,6 +62,7 @@ def set_blt_settings():
     blt.set(f'0xE016: ./graphics/menu_border_s.png, spacing={spacing}, resize={size}')
     blt.set(f'0xE017: ./graphics/menu_border_sw.png, spacing={spacing}, resize={size}')
     blt.set(f'0xE018: ./graphics/menu_border_w.png, spacing={spacing}, resize={size}')
+    blt.set(f'0xE019: ./graphics/medkit.png, spacing={spacing}, resize={size}')
 
     blt.set('palette.shade = 200,0,0,0')
     blt.set('palette.ret_blue = 0,76,153')

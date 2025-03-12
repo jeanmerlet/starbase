@@ -172,3 +172,26 @@ class Grid:
         x2 = (x + 1) * (self.block_size) - x
         y2 = (y + 1) * (self.block_size) - y
         self.tile_idx[x1: x2, y1: y2] = block.tile_idx
+
+
+class BSPNode:
+    def __init__(self, x, y, w, h):
+        self.x, self.y = x, y  # Top-left coordinates
+        self.w, self.h = w, h  # Width, height
+        self.left = None
+        self.right = None
+        self.room = None
+
+    def split(self):
+        """Randomly splits the node into two sub-regions (horizontal or vertical)."""
+        if self.w > self.h:  # Prefer vertical split if wider
+            split_x = np.random.randint(self.x + 2, self.x + self.w - 3)
+            self.left = BSPNode(self.x, self.y, split_x - self.x, self.h)
+            self.right = BSPNode(split_x, self.y, self.x + self.w - split_x, self.h)
+        else:  # Prefer horizontal split if taller
+            split_y = np.random.randint(self.y + 2, self.y + self.h - 3)
+            self.left = BSPNode(self.x, self.y, self.w, split_y - self.y)
+            self.right = BSPNode(self.x, split_y, self.w, self.y + self.h - split_y)
+
+    def is_leaf(self):
+        return self.left is None and self.right is None
