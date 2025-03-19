@@ -1,3 +1,3 @@
 name	class	char	color	graphic	corpse_graphic	blocking	hp	regen_rate	base_shp	base_scr	base_scd	attacks	att_type	range	area	damage	dam_type	strength	agility	intellect	willpower	melee	ranged	evasion	xp
 skitterling	actor	s	dark purple	[0xE007]	[0xE008]	True	8	1	0	0	0	claw,claw	melee,melee	1, 1	0,0	1d2,1d2	kinetic,kinetic	2	8	2	2	50	0	20	5
-robot	actor	R	darker red	None	None	True	40	0	0	0	0	slam	melee	1	0	1d8	kinetic	8	2	2	2	50	0	0	25
+robot	actor	R	darker red	[0xE021]	None	True	40	0	0	0	0	slam	melee	1	0	1d8	kinetic	8	2	2	2	50	0	0	25

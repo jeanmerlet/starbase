@@ -111,8 +111,8 @@ class Map:
     # make another csv table for these sets
     # Use a rarity property for items.
     def _roll_actors(self):
-        num_dist = [(1, 4), (1, 1)]
-        dist = [1, 0]
+        num_dist = [(1, 3), (1, 1)]
+        dist = [0.8, 0.2]
         idx = np.random.choice(np.arange(len(dist)), p=dist)
         num_range = num_dist[idx]
         if num_range != 0:
@@ -124,7 +124,7 @@ class Map:
         return name_set
 
     def _roll_items(self):
-        dist = [0, 0, 0.15, 0.15, 0.3, 0.4]
+        dist = [0, 0, 1, 0, 0, 0]
         idx = np.random.choice(np.arange(len(dist)), p=dist)
         name_set = [self.ITEM_DATA.index[idx]]
         return name_set

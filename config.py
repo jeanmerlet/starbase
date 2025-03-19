@@ -63,6 +63,8 @@ def set_blt_settings():
     blt.set(f'0xE017: ./graphics/menu_border_sw.png, spacing={spacing}, resize={size}')
     blt.set(f'0xE018: ./graphics/menu_border_w.png, spacing={spacing}, resize={size}')
     blt.set(f'0xE019: ./graphics/medkit.png, spacing={spacing}, resize={size}')
+    blt.set(f'0xE020: ./graphics/kevlar.png, spacing={spacing}, resize={size}')
+    blt.set(f'0xE021: ./graphics/rustbot.png, spacing={spacing}, resize={size}')
 
     blt.set('palette.shade = 200,0,0,0')
     blt.set('palette.ret_blue = 0,76,153')

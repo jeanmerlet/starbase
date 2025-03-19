@@ -11,3 +11,6 @@
 # krita backups
 *.png~
 *.kra~
+
+# zip
+*.zip

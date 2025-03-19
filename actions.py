@@ -26,12 +26,14 @@ class FPSToggle(Action):
 
 class QuitAction(Action):
     def perform(self, engine, entity):
-        raise SystemExit()
+        engine.running = False
 
 
 class WaitAction(Action):
     def perform(self, engine, entity):
-        pass
+        msg = 'You wait.'
+        engine.add_log_msg(msg)
+        #pass
 
 
 class DirectedAction(Action):

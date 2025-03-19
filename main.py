@@ -9,13 +9,12 @@ from engine import Engine
 import config
 
 
-#TODO: add wizmode for starting game with all entities renderered
+#TODO: add wizmode (view entire map, spawn entities, etc.)
 class Game:
     def __init__(self):
         event_handler = MainEventHandler()
         game_map = Map(config.MAP_WIDTH, config.MAP_HEIGHT)
         game_map.gen_map(config.GRIDW, config.GRIDH, config.BLOCK_SIZE)
-        #game_map.generate_space_station()
         player = game_map.spawn_player()
         entities = {player}
         game_map.populate(entities)
@@ -27,19 +26,19 @@ class Game:
         display_manager = DisplayManager(viewport, gui, animation_manager)
         self.engine = Engine(event_handler, game_map, player, entities, fov,
                              display_manager)
-
-    def initialize(self):
         blt.open()
         config.set_blt_settings()
 
     def run(self):
-        while True:
+        self.engine.running = True
+        while self.engine.running:
             self.engine.render()
             if blt.has_input():
                 self.engine.event_handler.handle_event(self.engine)
+        blt.close()
+        Raise SystemExit()
 
 
 if __name__ == "__main__":
     game = Game()
-    game.initialize()
     game.run()
